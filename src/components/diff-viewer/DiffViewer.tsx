@@ -159,6 +159,19 @@ export default function DiffViewer({
     }
   };
   
+  // Function to determine if a chunk has actual differences
+  const chunkHasDifferences = (chunk: DiffChunk): boolean => {
+    return chunk.additions > 0 || chunk.deletions > 0;
+  };
+  
+  // Sort chunks by their line numbers to maintain correct order
+  const sortedChunks = [...diffResult.chunks].sort((a, b) => {
+    // Get the first valid line number from each chunk
+    const aLine = a.lines[0]?.lineNumber.left || a.lines[0]?.lineNumber.right || 0;
+    const bLine = b.lines[0]?.lineNumber.left || b.lines[0]?.lineNumber.right || 0;
+    return aLine - bLine;
+  });
+  
   // Navigate to chunks
   const navigateToChunk = (index: number) => {
     if (index >= 0 && index < chunkRefs.current.length) {
@@ -389,7 +402,7 @@ export default function DiffViewer({
   // Determine if undo/redo are available
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
-  
+
   return (
     <div className="bg-white border rounded-lg overflow-hidden h-full flex flex-col">
       {/* Header with summary and controls */}
@@ -522,65 +535,98 @@ export default function DiffViewer({
           className="w-1/2 overflow-auto border-r"
           style={{ height: '100%' }}
         >
-          {diffResult.chunks.map((chunk, chunkIndex) => (
-            <div 
-              key={`chunk-left-${chunkIndex}`}
-              ref={(el) => { chunkRefs.current[chunkIndex] = el; }}
-              className={`border border-gray-200 rounded-l my-4 overflow-hidden cursor-pointer transition-all ${
-                selectedChunk === chunkIndex ? 'ring-2 ring-blue-500' : ''
-              }`}
-              onClick={() => handleChunkClick(chunkIndex)}
-            >
-              {/* Chunk header */}
-              <div className="bg-gray-100 px-3 py-1 text-xs border-b text-gray-700 flex justify-between items-center">
-                <span className="text-red-600 font-medium">
-                  {chunk.deletions > 0 ? `−${chunk.deletions} ${chunk.deletions === 1 ? 'removal' : 'removals'}` : ''}
-                </span>
+          {sortedChunks.map((chunk, chunkIndex) => {
+            const hasDifferences = chunkHasDifferences(chunk);
+            
+            return hasDifferences ? (
+              <div 
+                key={`chunk-left-${chunkIndex}`}
+                ref={(el) => { chunkRefs.current[chunkIndex] = el; }}
+                className={`${
+                  selectedChunk === chunkIndex ? 'ring-2 ring-blue-500' : ''
+                } ${chunkIndex > 0 ? 'border-t border-gray-200' : ''}`}
+                onClick={hasDifferences ? () => handleChunkClick(chunkIndex) : undefined}
+              >
+                {/* Chunk header - only show for chunks with differences */}
+                <div className="bg-gray-100 px-3 py-1 text-xs text-gray-700 flex justify-between items-center">
+                  <span className="text-red-600 font-medium">
+                    {chunk.deletions > 0 ? `−${chunk.deletions} ${chunk.deletions === 1 ? 'removal' : 'removals'}` : ''}
+                  </span>
+                  
+                  {/* Merge controls - visible only when chunk is selected */}
+                  {selectedChunk === chunkIndex && (
+                    <div className="flex items-center space-x-1">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          mergeLeftToRight(chunkIndex);
+                        }}
+                        className="px-2 py-0.5 text-xs bg-red-500 text-white hover:bg-red-600 rounded"
+                      >
+                        Merge change ←
+                      </button>
+                    </div>
+                  )}
+                </div>
                 
-                {/* Merge controls - visible only when chunk is selected */}
-                {selectedChunk === chunkIndex && (
-                  <div className="flex items-center space-x-1">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        mergeLeftToRight(chunkIndex);
-                      }}
-                      className="px-2 py-0.5 text-xs bg-red-500 text-white hover:bg-red-600 rounded"
+                {/* Chunk content */}
+                <div>
+                  {chunk.lines.map((line, lineIndex) => (
+                    <div 
+                      key={`line-left-${chunkIndex}-${lineIndex}`}
+                      className={`flex ${getLineClass(line.type, 'left')} cursor-pointer`}
                     >
-                      Merge change ←
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              {/* Chunk content */}
-              <div>
-                {chunk.lines.map((line, lineIndex) => (
-                  <div 
-                    key={`line-left-${chunkIndex}-${lineIndex}`}
-                    className={`flex ${getLineClass(line.type, 'left')}`}
-                  >
-                    <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
-                      {line.lineNumber.left || ' '}
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                        {line.lineNumber.left || ' '}
+                      </div>
+                      <div className="w-full overflow-x-auto">
+                        {line.content.left ? (
+                          <CodeLine 
+                            content={line.content.left} 
+                            language="abap"
+                            isModified={line.type === 'modified'}
+                            otherContent={line.content.right || ''}
+                            side="left"
+                          />
+                        ) : (
+                          <div className="px-2 py-0 h-5"></div>
+                        )}
+                      </div>
                     </div>
-                    <div className="w-full overflow-x-auto">
-                      {line.content.left ? (
-                        <CodeLine 
-                          content={line.content.left} 
-                          language="abap"
-                          isModified={line.type === 'modified'}
-                          otherContent={line.content.right || ''}
-                          side="left"
-                        />
-                      ) : (
-                        <div className="px-2 py-0 h-5"></div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ) : (
+              // For identical chunks, render without borders and extra styling
+              <div 
+                key={`chunk-left-${chunkIndex}`}
+              >
+                <div>
+                  {chunk.lines.map((line, lineIndex) => (
+                    <div 
+                      key={`line-left-${chunkIndex}-${lineIndex}`}
+                      className="flex"
+                    >
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                        {line.lineNumber.left || ' '}
+                      </div>
+                      <div className="w-full overflow-x-auto">
+                        {line.content.left ? (
+                          <CodeLine 
+                            content={line.content.left} 
+                            language="abap"
+                            side="left"
+                          />
+                        ) : (
+                          <div className="px-2 py-0 h-5"></div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
         
         {/* Right pane */}
@@ -589,64 +635,97 @@ export default function DiffViewer({
           className="w-1/2 overflow-auto"
           style={{ height: '100%' }}
         >
-          {diffResult.chunks.map((chunk, chunkIndex) => (
-            <div 
-              key={`chunk-right-${chunkIndex}`}
-              className={`border border-gray-200 rounded-r my-4 overflow-hidden cursor-pointer transition-all ${
-                selectedChunk === chunkIndex ? 'ring-2 ring-blue-500' : ''
-              }`}
-              onClick={() => handleChunkClick(chunkIndex)}
-            >
-              {/* Chunk header */}
-              <div className="bg-gray-100 px-3 py-1 text-xs border-b text-gray-700 flex justify-between items-center">
-                <span className="text-green-600 font-medium">
-                  {chunk.additions > 0 ? `+${chunk.additions} ${chunk.additions === 1 ? 'addition' : 'additions'}` : ''}
-                </span>
+          {sortedChunks.map((chunk, chunkIndex) => {
+            const hasDifferences = chunkHasDifferences(chunk);
+            
+            return hasDifferences ? (
+              <div 
+                key={`chunk-right-${chunkIndex}`}
+                className={`${
+                  selectedChunk === chunkIndex ? 'ring-2 ring-blue-500' : ''
+                } ${chunkIndex > 0 ? 'border-t border-gray-200' : ''}`}
+                onClick={hasDifferences ? () => handleChunkClick(chunkIndex) : undefined}
+              >
+                {/* Chunk header - only show for chunks with differences */}
+                <div className="bg-gray-100 px-3 py-1 text-xs text-gray-700 flex justify-between items-center">
+                  <span className="text-green-600 font-medium">
+                    {chunk.additions > 0 ? `+${chunk.additions} ${chunk.additions === 1 ? 'addition' : 'additions'}` : ''}
+                  </span>
+                  
+                  {/* Merge controls - visible only when chunk is selected */}
+                  {selectedChunk === chunkIndex && (
+                    <div className="flex items-center space-x-1">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          mergeRightToLeft(chunkIndex);
+                        }}
+                        className="px-2 py-0.5 text-xs bg-green-500 text-white hover:bg-green-600 rounded"
+                      >
+                        Merge change →
+                      </button>
+                    </div>
+                  )}
+                </div>
                 
-                {/* Merge controls - visible only when chunk is selected */}
-                {selectedChunk === chunkIndex && (
-                  <div className="flex items-center space-x-1">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        mergeRightToLeft(chunkIndex);
-                      }}
-                      className="px-2 py-0.5 text-xs bg-green-500 text-white hover:bg-green-600 rounded"
+                {/* Chunk content */}
+                <div>
+                  {chunk.lines.map((line, lineIndex) => (
+                    <div 
+                      key={`line-right-${chunkIndex}-${lineIndex}`}
+                      className={`flex ${getLineClass(line.type, 'right')} cursor-pointer`}
                     >
-                      Merge change →
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              {/* Chunk content */}
-              <div>
-                {chunk.lines.map((line, lineIndex) => (
-                  <div 
-                    key={`line-right-${chunkIndex}-${lineIndex}`}
-                    className={`flex ${getLineClass(line.type, 'right')}`}
-                  >
-                    <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
-                      {line.lineNumber.right || ' '}
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                        {line.lineNumber.right || ' '}
+                      </div>
+                      <div className="w-full overflow-x-auto">
+                        {line.content.right ? (
+                          <CodeLine 
+                            content={line.content.right} 
+                            language="abap"
+                            isModified={line.type === 'modified'}
+                            otherContent={line.content.left || ''}
+                            side="right"
+                          />
+                        ) : (
+                          <div className="px-2 py-0 h-5"></div>
+                        )}
+                      </div>
                     </div>
-                    <div className="w-full overflow-x-auto">
-                      {line.content.right ? (
-                        <CodeLine 
-                          content={line.content.right} 
-                          language="abap"
-                          isModified={line.type === 'modified'}
-                          otherContent={line.content.left || ''}
-                          side="right"
-                        />
-                      ) : (
-                        <div className="px-2 py-0 h-5"></div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ) : (
+              // For identical chunks, render without borders and extra styling
+              <div 
+                key={`chunk-right-${chunkIndex}`}
+              >
+                <div>
+                  {chunk.lines.map((line, lineIndex) => (
+                    <div 
+                      key={`line-right-${chunkIndex}-${lineIndex}`}
+                      className="flex"
+                    >
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                        {line.lineNumber.right || ' '}
+                      </div>
+                      <div className="w-full overflow-x-auto">
+                        {line.content.right ? (
+                          <CodeLine 
+                            content={line.content.right} 
+                            language="abap"
+                            side="right"
+                          />
+                        ) : (
+                          <div className="px-2 py-0 h-5"></div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
         
         {/* Minimap indicator (right side) */}
@@ -655,7 +734,7 @@ export default function DiffViewer({
           className="absolute right-0 top-0 w-1.5 h-full"
           style={{ background: '#f5f5f5' }}
         >
-          {diffResult.chunks.map((chunk, index) => {
+          {sortedChunks.map((chunk, index) => {
             // Calculate position relative to file size
             const totalLines = Math.max(diffResult.stats.totalLeft, diffResult.stats.totalRight);
             const chunkLines = chunk.lines.length;
@@ -663,6 +742,10 @@ export default function DiffViewer({
             
             const topPercent = (chunkStartLine / totalLines) * 100;
             const heightPercent = (chunkLines / totalLines) * 100;
+            
+            // Only show in minimap if chunk has differences
+            const hasDifferences = chunkHasDifferences(chunk);
+            if (!hasDifferences) return null;
             
             // Determine color based on chunk content
             let color = '#ccc'; // Default gray
