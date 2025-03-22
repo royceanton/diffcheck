@@ -57,6 +57,12 @@ interface DiffViewerProps {
   onMergeChanges?: (updatedLeftContent: string, updatedRightContent: string) => void;
 }
 
+// Define a history item type to track changes
+interface HistoryItem {
+  leftContent: string;
+  rightContent: string;
+}
+
 export default function DiffViewer({ 
   diffResult, 
   leftContent, 
@@ -66,6 +72,11 @@ export default function DiffViewer({
 }: DiffViewerProps) {
   const [activeChunk, setActiveChunk] = useState<number | null>(null);
   const [selectedChunk, setSelectedChunk] = useState<number | null>(null);
+  
+  // Add history state tracking
+  const [history, setHistory] = useState<HistoryItem[]>([{ leftContent, rightContent }]);
+  const [historyIndex, setHistoryIndex] = useState<number>(0);
+  
   const chunkRefs = useRef<(HTMLDivElement | null)[]>([]);
   const leftPaneRef = useRef<HTMLDivElement>(null);
   const rightPaneRef = useRef<HTMLDivElement>(null);
@@ -102,6 +113,51 @@ export default function DiffViewer({
       cleanupRight();
     };
   }, []);
+  
+  // Function to add a new history state when changes are made
+  const addToHistory = (newLeftContent: string, newRightContent: string) => {
+    // Remove any future history if we're not at the end
+    const newHistory = history.slice(0, historyIndex + 1);
+    
+    // Add the new state
+    newHistory.push({ leftContent: newLeftContent, rightContent: newRightContent });
+    
+    // Update history and index
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+  
+  // Undo function
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      const previousState = history[newIndex];
+      
+      // Apply the previous state
+      if (onMergeChanges) {
+        onMergeChanges(previousState.leftContent, previousState.rightContent);
+      }
+      
+      // Update the history index
+      setHistoryIndex(newIndex);
+    }
+  };
+  
+  // Redo function
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      const nextState = history[newIndex];
+      
+      // Apply the next state
+      if (onMergeChanges) {
+        onMergeChanges(nextState.leftContent, nextState.rightContent);
+      }
+      
+      // Update the history index
+      setHistoryIndex(newIndex);
+    }
+  };
   
   // Navigate to chunks
   const navigateToChunk = (index: number) => {
@@ -205,6 +261,9 @@ export default function DiffViewer({
     // Update right content
     const newRightContent = rightLines.join('\n');
     
+    // Add the change to history before updating
+    addToHistory(leftContent, newRightContent);
+    
     // Call the callback with updated content
     if (onMergeChanges) {
       onMergeChanges(leftContent, newRightContent);
@@ -282,6 +341,9 @@ export default function DiffViewer({
     // Update left content
     const newLeftContent = leftLines.join('\n');
     
+    // Add the change to history before updating
+    addToHistory(newLeftContent, rightContent);
+    
     // Call the callback with updated content
     if (onMergeChanges) {
       onMergeChanges(newLeftContent, rightContent);
@@ -311,8 +373,22 @@ export default function DiffViewer({
     copyToClipboard(rightContent);
   };
   
+  // Update the reset functionality to clear history as well
+  const handleReset = () => {
+    // Clear history when resetting
+    setHistory([{ leftContent, rightContent }]);
+    setHistoryIndex(0);
+    
+    // Call the original reset function
+    onResetView();
+  };
+
   // Check if any diffs exist
   const hasChanges = diffResult.stats.additions > 0 || diffResult.stats.deletions > 0;
+  
+  // Determine if undo/redo are available
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
   
   return (
     <div className="bg-white border rounded-lg overflow-hidden h-full flex flex-col">
@@ -337,41 +413,77 @@ export default function DiffViewer({
           )}
         </div>
         
-        {/* Navigation controls */}
-        {hasChanges && selectedChunk !== null && (
-          <div className="flex items-center space-x-2 mr-4">
-            <div className="text-sm text-gray-700">
-              Change {selectedChunk + 1} of {diffResult.chunks.length}
+        <div className="flex items-center space-x-4">
+          {/* Navigation controls */}
+          {hasChanges && selectedChunk !== null && (
+            <div className="flex items-center space-x-2">
+              <div className="text-sm text-gray-700">
+                Change {selectedChunk + 1} of {diffResult.chunks.length}
+              </div>
+              <button 
+                onClick={navigatePrevChunk}
+                className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded flex items-center"
+                aria-label="Previous change"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1">
+                  <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                </svg>
+                Prev
+              </button>
+              <button 
+                onClick={navigateNextChunk}
+                className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded flex items-center"
+                aria-label="Next change"
+              >
+                Next
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1">
+                  <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                </svg>
+              </button>
             </div>
-            <button 
-              onClick={navigatePrevChunk}
-              className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded flex items-center"
-              aria-label="Previous change"
+          )}
+          
+          {/* History and reset controls */}
+          <div className="flex items-center space-x-2">
+            {/* Undo button */}
+            <button
+              className={`px-3 py-1 text-sm rounded flex items-center ${
+                canUndo ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
+              onClick={handleUndo}
+              disabled={!canUndo}
+              title="Undo last change"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1">
-                <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M7.793 2.232a.75.75 0 01-.025 1.06L3.622 7.25h10.003a5.375 5.375 0 010 10.75H10.75a.75.75 0 010-1.5h2.875a3.875 3.875 0 000-7.75H3.622l4.146 3.957a.75.75 0 01-1.036 1.085l-5.5-5.25a.75.75 0 010-1.085l5.5-5.25a.75.75 0 011.06.025z" clipRule="evenodd" />
               </svg>
-              Prev
+              Undo
             </button>
-            <button 
-              onClick={navigateNextChunk}
-              className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded flex items-center"
-              aria-label="Next change"
+            
+            {/* Redo button */}
+            <button
+              className={`px-3 py-1 text-sm rounded flex items-center ${
+                canRedo ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
+              onClick={handleRedo}
+              disabled={!canRedo}
+              title="Redo last undone change"
             >
-              Next
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1">
-                <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M12.207 2.232a.75.75 0 00.025 1.06L16.378 7.25H6.375a5.375 5.375 0 000 10.75h2.875a.75.75 0 000-1.5H6.375a3.875 3.875 0 010-7.75h10.003l-4.146 3.957a.75.75 0 001.036 1.085l5.5-5.25a.75.75 0 000-1.085l-5.5-5.25a.75.75 0 00-1.06.025z" clipRule="evenodd" />
               </svg>
+              Redo
+            </button>
+            
+            {/* Reset button */}
+            <button
+              className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded"
+              onClick={handleReset}
+            >
+              Reset Comparison
             </button>
           </div>
-        )}
-        
-        <button
-          className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded"
-          onClick={onResetView}
-        >
-          Reset Comparison
-        </button>
+        </div>
       </div>
       
       {/* File headers with copy buttons */}
