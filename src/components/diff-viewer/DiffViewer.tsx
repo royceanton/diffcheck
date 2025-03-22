@@ -21,7 +21,9 @@ hljs.registerLanguage('abap', function(hljs) {
                'METHOD IMPORTING EXPORTING CHANGING FORM ENDFORM PERFORM ' +
                'CLEAR FIELD-SYMBOLS ASSIGN CP EQ NE GT LT GE LE VALUE CONSTANTS ' +
                'CLASS ENDCLASS TRY ENDTRY FIELD-SYMBOLS DEFINITION RETURNING ' +
-               'METHODS IMPLEMENTATION USING ELSE',
+               'METHODS IMPLEMENTATION USING ELSE PUBLIC FINAL CREATE' +
+               'INSERT UPDATE DELETE MODIFY COMMIT ROLLBACK WHERE ORDER BY ' +
+               'GROUP BY HAVING JOIN INNER LEFT OUTER RIGHT FULL ON',
       literal: 'TRUE FALSE NULL',
     },
     contains: [
@@ -253,17 +255,18 @@ export default function DiffViewer({
     if (!chunk) return;
     
     // Get all the lines from this chunk that exist in the left side
+    // Include empty lines by checking for null specifically, not empty strings
     const leftLines = chunk.lines
-      .filter(line => line.content.left !== null)
-      .map(line => line.content.left as string); // Non-null assertion with type cast
+      .filter(line => line.content.left !== null) // Keep empty strings, only filter out null
+      .map(line => line.content.left as string);
     
-    // If no left lines, nothing to merge
+    // If there are no lines to merge (all null), return early
     if (leftLines.length === 0) return;
     
     // Get line numbers to determine where to insert in the right content
     const lineNumbers = chunk.lines
       .filter(line => line.lineNumber.right !== null)
-      .map(line => line.lineNumber.right as number); // Non-null assertion with type cast
+      .map(line => line.lineNumber.right as number);
     
     // Determine the insertion point in the right content
     let rightLines = rightContent.split('\n');
@@ -279,8 +282,16 @@ export default function DiffViewer({
       
       // Replace the lines in the right content
       if (firstLine !== undefined && lastLine !== undefined) {
+        // Make sure we've captured all lines intended to be replaced on the right side
+        const actualLastLine = chunk.lines.reduce((maxLine, line) => {
+          if (line.lineNumber.right !== null && line.lineNumber.right > maxLine) {
+            return line.lineNumber.right;
+          }
+          return maxLine;
+        }, lastLine);
+        
         // Remove the lines that will be replaced (convert from 1-indexed to 0-indexed)
-        rightLines.splice(firstLine - 1, lastLine - firstLine + 1);
+        rightLines.splice(firstLine - 1, actualLastLine - firstLine + 1);
         
         // Insert the left lines at the position of the first line
         rightLines.splice(firstLine - 1, 0, ...leftLines);
@@ -289,24 +300,48 @@ export default function DiffViewer({
         rightLines.push(...leftLines);
       }
     } else {
-      // If there are no line numbers on the right side, find adjacent content
+      // SPECIAL CASE: Handle lines that only exist on the left side (no right line numbers)
+      // Find adjacent line numbers to determine insertion point
       
-      // Try to find lines before this chunk
-      const prevRightLineNumber = chunk.lines
-        .findIndex(line => line.lineNumber.right !== null);
+      // First try to find the previous chunk with line numbers on the right 
+      let insertPosition = rightLines.length; // Default to end of file
       
-      if (prevRightLineNumber >= 0) {
-        // Insert after the previous line
-        const lineNumber = chunk.lines[prevRightLineNumber].lineNumber.right;
-        if (lineNumber !== null) {
-          rightLines.splice(lineNumber, 0, ...leftLines);
-        } else {
-          // Fallback - append to the end
-          rightLines.push(...leftLines);
+      // Look at the chunk index to determine where this chunk should go relative to others
+      const currentChunkIndex = sortedChunks.indexOf(chunk);
+      
+      if (currentChunkIndex > 0) {
+        // Look at previous chunks to find a reference point
+        for (let i = currentChunkIndex - 1; i >= 0; i--) {
+          const prevChunk = sortedChunks[i];
+          const lastLineOfPrevChunk = prevChunk.lines[prevChunk.lines.length - 1];
+          
+          if (lastLineOfPrevChunk.lineNumber.right !== null) {
+            // Found a previous chunk with line numbers, insert after its last line
+            insertPosition = lastLineOfPrevChunk.lineNumber.right;
+            break;
+          }
         }
+      }
+      
+      // If we found a reference point, use it for insertion
+      if (insertPosition > 0 && insertPosition <= rightLines.length) {
+        rightLines.splice(insertPosition, 0, ...leftLines);
       } else {
-        // If no clear position, append to the end
-        rightLines.push(...leftLines);
+        // Look for the next chunk to determine position
+        for (let i = currentChunkIndex + 1; i < sortedChunks.length; i++) {
+          const nextChunk = sortedChunks[i];
+          const firstLineOfNextChunk = nextChunk.lines[0];
+          
+          if (firstLineOfNextChunk.lineNumber.right !== null) {
+            // Found a following chunk with line numbers, insert before its first line
+            insertPosition = firstLineOfNextChunk.lineNumber.right - 1;
+            if (insertPosition <= 0) insertPosition = 0;
+            break;
+          }
+        }
+        
+        // Insert at the determined position
+        rightLines.splice(insertPosition, 0, ...leftLines);
       }
     }
     
@@ -333,17 +368,18 @@ export default function DiffViewer({
     if (!chunk) return;
     
     // Get all the lines from this chunk that exist in the right side
+    // Include empty lines by checking for null specifically, not empty strings
     const rightLines = chunk.lines
-      .filter(line => line.content.right !== null)
-      .map(line => line.content.right as string); // Non-null assertion with type cast
+      .filter(line => line.content.right !== null) // Keep empty strings, only filter out null
+      .map(line => line.content.right as string);
     
-    // If no right lines, nothing to merge
+    // If there are no lines to merge (all null), return early
     if (rightLines.length === 0) return;
     
     // Get line numbers to determine where to insert in the left content
     const lineNumbers = chunk.lines
       .filter(line => line.lineNumber.left !== null)
-      .map(line => line.lineNumber.left as number); // Non-null assertion with type cast
+      .map(line => line.lineNumber.left as number);
     
     // Determine the insertion point in the left content
     let leftLines = leftContent.split('\n');
@@ -359,8 +395,16 @@ export default function DiffViewer({
       
       // Replace the lines in the left content
       if (firstLine !== undefined && lastLine !== undefined) {
+        // Make sure we've captured all lines intended to be replaced on the left side
+        const actualLastLine = chunk.lines.reduce((maxLine, line) => {
+          if (line.lineNumber.left !== null && line.lineNumber.left > maxLine) {
+            return line.lineNumber.left;
+          }
+          return maxLine;
+        }, lastLine);
+        
         // Remove the lines that will be replaced (convert from 1-indexed to 0-indexed)
-        leftLines.splice(firstLine - 1, lastLine - firstLine + 1);
+        leftLines.splice(firstLine - 1, actualLastLine - firstLine + 1);
         
         // Insert the right lines at the position of the first line
         leftLines.splice(firstLine - 1, 0, ...rightLines);
@@ -369,24 +413,48 @@ export default function DiffViewer({
         leftLines.push(...rightLines);
       }
     } else {
-      // If there are no line numbers on the left side, find adjacent content
+      // SPECIAL CASE: Handle lines that only exist on the right side (no left line numbers)
+      // Find adjacent line numbers to determine insertion point
       
-      // Try to find lines before this chunk
-      const prevLeftLineNumber = chunk.lines
-        .findIndex(line => line.lineNumber.left !== null);
+      // First try to find the previous chunk with line numbers on the left 
+      let insertPosition = leftLines.length; // Default to end of file
       
-      if (prevLeftLineNumber >= 0) {
-        // Insert after the previous line
-        const lineNumber = chunk.lines[prevLeftLineNumber].lineNumber.left;
-        if (lineNumber !== null) {
-          leftLines.splice(lineNumber, 0, ...rightLines);
-        } else {
-          // Fallback - append to the end
-          leftLines.push(...rightLines);
+      // Look at the chunk index to determine where this chunk should go relative to others
+      const currentChunkIndex = sortedChunks.indexOf(chunk);
+      
+      if (currentChunkIndex > 0) {
+        // Look at previous chunks to find a reference point
+        for (let i = currentChunkIndex - 1; i >= 0; i--) {
+          const prevChunk = sortedChunks[i];
+          const lastLineOfPrevChunk = prevChunk.lines[prevChunk.lines.length - 1];
+          
+          if (lastLineOfPrevChunk.lineNumber.left !== null) {
+            // Found a previous chunk with line numbers, insert after its last line
+            insertPosition = lastLineOfPrevChunk.lineNumber.left;
+            break;
+          }
         }
+      }
+      
+      // If we found a reference point, use it for insertion
+      if (insertPosition > 0 && insertPosition <= leftLines.length) {
+        leftLines.splice(insertPosition, 0, ...rightLines);
       } else {
-        // If no clear position, append to the end
-        leftLines.push(...rightLines);
+        // Look for the next chunk to determine position
+        for (let i = currentChunkIndex + 1; i < sortedChunks.length; i++) {
+          const nextChunk = sortedChunks[i];
+          const firstLineOfNextChunk = nextChunk.lines[0];
+          
+          if (firstLineOfNextChunk.lineNumber.left !== null) {
+            // Found a following chunk with line numbers, insert before its first line
+            insertPosition = firstLineOfNextChunk.lineNumber.left - 1;
+            if (insertPosition <= 0) insertPosition = 0;
+            break;
+          }
+        }
+        
+        // Insert at the determined position
+        leftLines.splice(insertPosition, 0, ...rightLines);
       }
     }
     
