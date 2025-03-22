@@ -9,8 +9,8 @@ export interface DiffResult {
 export interface LineComparison {
   type: 'added' | 'removed' | 'unchanged' | 'modified';
   content: {
-    left: string;
-    right: string;
+    left: string | null;
+    right: string | null;
   };
   lineNumber: {
     left: number | null;
@@ -135,7 +135,8 @@ function diffAlgorithm(leftText: string, rightText: string): DiffResult {
   let rightLineNumber = 1;
   
   // Improved algorithm to better align related lines
-  diffs.forEach((diff) => {
+  for (let i = 0; i < diffs.length; i++) {
+    const diff = diffs[i];
     const lines = diff.value.split('\n');
     // Remove the last empty line that comes from split
     if (lines[lines.length - 1] === '') {
@@ -146,9 +147,9 @@ function diffAlgorithm(leftText: string, rightText: string): DiffResult {
       // Added lines (only in right file)
       lines.forEach((line) => {
         result.push({
-          type: 'added',
+          type: 'added' as const,
           content: {
-            left: '',
+            left: null,
             right: line,
           },
           lineNumber: {
@@ -160,10 +161,10 @@ function diffAlgorithm(leftText: string, rightText: string): DiffResult {
     } else if (diff.removed) {
       // Store removed lines to check for possible modifications
       const removedLines = lines.map(line => ({
-        type: 'removed',
+        type: 'removed' as const,
         content: {
           left: line,
-          right: '',
+          right: null,
         },
         lineNumber: {
           left: leftLineNumber++,
@@ -172,7 +173,7 @@ function diffAlgorithm(leftText: string, rightText: string): DiffResult {
       }));
       
       // Check if next diff is an addition (possible modification)
-      const nextDiff = diffs[diffs.indexOf(diff) + 1];
+      const nextDiff = i < diffs.length - 1 ? diffs[i + 1] : null;
       if (nextDiff && nextDiff.added) {
         const addedLines = nextDiff.value.split('\n');
         if (addedLines[addedLines.length - 1] === '') {
@@ -182,21 +183,21 @@ function diffAlgorithm(leftText: string, rightText: string): DiffResult {
         // Handle case where we have the same number of lines removed and added
         // Treat them as modifications rather than separate remove/add operations
         if (removedLines.length === addedLines.length) {
-          for (let i = 0; i < removedLines.length; i++) {
+          for (let j = 0; j < removedLines.length; j++) {
             result.push({
-              type: 'modified',
+              type: 'modified' as const,
               content: {
-                left: removedLines[i].content.left,
-                right: addedLines[i],
+                left: removedLines[j].content.left,
+                right: addedLines[j],
               },
               lineNumber: {
-                left: removedLines[i].lineNumber.left,
+                left: removedLines[j].lineNumber.left,
                 right: rightLineNumber++,
               },
             });
           }
           // Skip the next diff since we've already processed it
-          diffs[diffs.indexOf(diff) + 1].added = false;
+          i++;
         } else {
           // Different number of lines, treat as separate operations
           result.push(...removedLines);
@@ -209,7 +210,7 @@ function diffAlgorithm(leftText: string, rightText: string): DiffResult {
       // Unchanged lines
       lines.forEach((line) => {
         result.push({
-          type: 'unchanged',
+          type: 'unchanged' as const,
           content: {
             left: line,
             right: line,
@@ -221,7 +222,7 @@ function diffAlgorithm(leftText: string, rightText: string): DiffResult {
         });
       });
     }
-  });
+  }
   
   return { lines: result };
 }
