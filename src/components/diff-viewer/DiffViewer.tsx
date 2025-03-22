@@ -16,14 +16,103 @@ hljs.registerLanguage('abap', function(hljs) {
     name: 'ABAP',
     case_insensitive: true,
     keywords: {
-      keyword: 'REPORT DATA TYPE TABLE OF SELECT FROM INTO UP TO ROWS ' +
-               'LOOP AT ENDLOOP IF ENDIF WRITE ENDMETHOD CALL FUNCTION ' +
-               'METHOD IMPORTING EXPORTING CHANGING FORM ENDFORM PERFORM ' +
-               'CLEAR FIELD-SYMBOLS ASSIGN CP EQ NE GT LT GE LE VALUE CONSTANTS ' +
-               'CLASS ENDCLASS TRY ENDTRY FIELD-SYMBOLS DEFINITION RETURNING ' +
-               'METHODS IMPLEMENTATION USING ELSE PUBLIC FINAL CREATE' +
-               'INSERT UPDATE DELETE MODIFY COMMIT ROLLBACK WHERE ORDER BY ' +
-               'GROUP BY HAVING JOIN INNER LEFT OUTER RIGHT FULL ON',
+      keyword:
+      'REPORT DATA TYPE TABLE OF SELECT FROM INTO UP TO ROWS ' +
+      'LOOP AT ENDLOOP IF ENDIF WRITE ENDMETHOD CALL FUNCTION ' +
+      'METHOD IMPORTING EXPORTING CHANGING FORM ENDFORM PERFORM ' +
+      'CLEAR FIELD-SYMBOLS FIELD SYMBOLS ASSIGN CP EQ NE GT LT GE LE VALUE CONSTANTS ' +
+      'CLASS ENDCLASS TRY CATCH ENDTRY FIELD-SYMBOLS DEFINITION RETURNING ' +
+      'METHODS IMPLEMENTATION USING ELSE PUBLIC FINAL CREATE ' +
+      'INSERT UPDATE DELETE MODIFY COMMIT ROLLBACK WHERE ORDER BY ' +
+      'GROUP BY HAVING JOIN INNER LEFT OUTER RIGHT FULL ON CREATE OBJECT START-OF-SELECTION ' +
+      'ABAP_SYSTEM_TIMEZONE ABAP_USER_TIMEZONE ABAP-SOURCE ABBREVIATED ABS ' +
+      'ABSTRACT ACCEPT ACCEPTING ACCORDING ACTIVATION ACTUAL ADABAS ADD ADD-CORRESPONDING ADJACENT ' +
+      'AFTER ALIAS ALIASES ALIGN ALL ALLOCATE ALPHA ANALYSIS ANALYZER AND ' +
+      'ANNOTATE ANY APPEND APPENDAGE APPENDING APPLICATION ARCHIVE AREA ARITHMETIC AS ' +
+      'AS400 ASCENDING ASPECT ASSERT ASSIGN ASSIGNED ASSIGNING ASSOCIATION ASYNCHRONOUS AT ' +
+      'ATTRIBUTES AUTHORITY AUTHORITY-CHECK AVG AVG, BACK BACKGROUND BACKUP BACKWARD BADI ' +
+      'BASE BEFORE BEGIN BETWEEN BIG BINARY BINTOHEX BIT BIT-AND BIT-NOT BIT-OR BIT-XOR BLACK ' +
+      'BLANK BLANKS BLOB BLOCK BLOCKS BLUE BOUND BOUNDARIES BOUNDS BOXED BREAK-POINT BT ' +
+      'BUFFER BY BYPASSING BYTE BYTE-CA BYTE-CN BYTE-CO BYTE-CS BYTE-NA BYTE-NS BYTE-ORDER CA ' +
+      'CALL CALLING CASE CAST CASTING CATCH CEIL CENTER CENTERED CHAIN CHAIN-INPUT CHAIN-REQUEST ' +
+      'CHANGE CHANGING CHANNELS CHAR CHAR-TO-HEX CHARACTER CHECK CHECKBOX CI_ CIRCULAR CLASS ' +
+      'CLASS-CODING CLASS-DATA CLASS-EVENTS CLASS-METHODS CLASS-POOL CLEANUP CLEAR CLIENT CLNT ' +
+      'CLOB CLOCK CLOSE CN CO COALESCE CODE CODING COL_BACKGROUND COL_GROUP COL_HEADING COL_KEY ' +
+      'COL_NEGATIVE COL_NORMAL COL_POSITIVE COL_TOTAL COLLECT COLOR COLUMN COLUMNS COMMENT COMMENTS ' +
+      'COMMIT COMMON COMMUNICATION COMPARING COMPONENT COMPONENTS COMPRESSION COMPUTE CONCAT ' +
+      'CONCAT_WITH_SPACE CONCATENATE COND CONDENSE CONDITION CONNECT CONNECTION CONSTANTS CONTEXT ' +
+      'CONTEXTS CONTINUE CONTROL CONTROLS CONV CONVERSION CONVERT COPIES COPY CORRESPONDING COUNT ' +
+      'COUNTRY COVER CP CPI CREATE CREATING CRITICAL CROSS CS CUKY CURR CURRENCY CURRENCY_CONVERSION ' +
+      'CURRENT CURSOR CURSOR-SELECTION CUSTOMER CUSTOMER-FUNCTION DANGEROUS DATA DATABASE DATAINFO ' +
+      'DATASET DATE DATS DATS_ADD_DAYS DATS_ADD_MONTHS DATS_DAYS_BETWEEN DATS_IS_VALID DATS_TIMS_TO_TSTMP ' +
+      'DAYLIGHT DB2 DB6 DD/MM/YY DD/MM/YYYY DDMMYY DEALLOCATE DEC DECIMAL_SHIFT DECIMALS ' +
+      'DECLARATIONS DEEP DEFAULT DEFERRED DEFINE DEFINING DEFINITION DELETE DELETING DEMAND ' +
+      'DEPARTMENT DESCENDING DESCRIBE DESTINATION DETAIL DIALOG DIRECTORY DISCARDING DISCONNECT ' +
+      'DISPLAY DISPLAY-MODE DISTANCE DISTINCT DIV DIVIDE DIVIDE-CORRESPONDING DIVISION DO DUMMY ' +
+      'DUPLICATE DUPLICATES DURATION DURING DYNAMIC DYNPRO E EDIT EDITOR-CALL ELSE ELSEIF EMPTY ' +
+      'ENABLED ENABLING ENCODING END END-ENHANCEMENT-SECTION END-LINES END-OF-DEFINITION END-OF-FILE ' +
+      'END-OF-PAGE END-OF-SELECTION END-TEST-INJECTION END-TEST-SEAM ENDAT ENDCASE ENDCATCH ENDCHAIN ' +
+      'ENDCLASS ENDDO ENDENHANCEMENT ENDEXEC ENDFORM ENDFUNCTION ENDIAN ENDIF ENDING ENDINTERFACE ' +
+      'ENDLOOP ENDMETHOD ENDMODULE ENDON ENDPROVIDE ENDSELECT ENDTRY ENDWHILE ENDWITH ENGINEERING ' +
+      'ENHANCEMENT ENHANCEMENT-POINT ENHANCEMENT-SECTION ENHANCEMENTS ENTRIES ENTRY ENUM ENVIRONMENT ' +
+      'EQ EQUIV ERRORMESSAGE ERRORS ESCAPE ESCAPING EVENT EVENTS EXACT EXCEPT EXCEPTION ' +
+      'EXCEPTION-TABLE EXCEPTIONS EXCLUDE EXCLUDING EXEC EXECUTE EXISTS EXIT EXIT-COMMAND EXPAND ' +
+      'EXPANDING EXPIRATION EXPLICIT EXPONENT EXPORT EXPORTING EXTEND EXTENDED EXTENSION EXTRACT ' +
+      'FAIL FETCH FIELD FIELD-GROUPS FIELD-SYMBOL FIELD-SYMBOLS FIELDS FILE FILTER FILTER-TABLE ' +
+      'FILTERS FINAL FIND FIRST FIRST-LINE FIXED-POINT FKEQ FKGE FLOOR FLTP FLTP_TO_DEC FLUSH ' +
+      'FONT FOR FORM FORMAT FORWARD FOUND FRAME FRAMES FREE FRIENDS FROM FUNCTION FUNCTION-POOL ' +
+      'FUNCTIONALITY FURTHER GAPS GE GENERATE GET GIVING GKEQ GKGE GLOBAL GRANT GREEN GROUP GROUPS ' +
+      'GT HANDLE HANDLER HARMLESS HASHED HAVING HDB HEAD-LINES HEADER HEADERS HEADING HELP-ID ' +
+      'HELP-REQUEST HEXTOBIN HIDE HIGH HINT HOLD HOTSPOT I ICON ID IDENTIFICATION IDENTIFIER IDS ' +
+      'IF IGNORE IGNORING IMMEDIATELY IMPLEMENTATION IMPLEMENTATIONS IMPLEMENTED IMPLICIT IMPORT ' +
+      'IMPORTING IN INACTIVE INCL INCLUDE INCLUDES INCLUDING INCREMENT INDEX INDEX-LINE INFOTYPES ' +
+      'INHERIT INHERITING INIT INITIAL INITIALIZATION INNER INOUT *-INPUT INPUT INSERT INSTANCE ' +
+      'INSTANCES INSTR INT1 INT2 INT4 INT8 INTENSIFIED INTERFACE INTERFACE-POOL INTERFACES ' +
+      'INTERNAL INTERVALS INTO INVERSE INVERTED-DATE IS ISO ITNO JOB JOIN KEEP KEEPING KERNEL ' +
+      'KEY KEYS KEYWORDS KIND LANG LANGUAGE LAST LATE LAYOUT LE LEADING LEAVE LEFT LEFT-JUSTIFIED ' +
+      'LEFTPLUS LEFTSPACE LEGACY LENGTH LET LEVEL LEVELS LIKE LINE LINE-COUNT LINE-SELECTION ' +
+      'LINE-SIZE LINEFEED LINES LIST LIST-PROCESSING LISTBOX LITTLE LLANG LOAD LOAD-OF-PROGRAM ' +
+      'LOB LOCAL LOCALE LOCATOR LOG-POINT LOGFILE LOGICAL LONG LOOP LOW LOWER LPAD LPI LT LTRIM M ' +
+      'MAIL MAIN MAJOR-ID MAPPING MARGIN MARK MASK MATCH MATCHCODE MAX MAXIMUM MEDIUM MEMBERS MEMORY ' +
+      'MESH MESSAGE MESSAGE-ID MESSAGES MESSAGING METHOD METHODS MIN MINIMUM MINOR-ID MM/DD/YY ' +
+      'MM/DD/YYYY MMDDYY MOD MODE MODIF MODIFIER MODIFY MODULE MOVE MOVE-CORRESPONDING MSSQLNT ' +
+      'MULTIPLY MULTIPLY-CORRESPONDING NA NAME NAMETAB NATIVE NB NE NESTED NESTING NEW NEW-LINE ' +
+      'NEW-PAGE NEW-SECTION NEXT NO NO-DISPLAY NO-EXTENSION NO-GAP NO-GAPS NO-GROUPING NO-HEADING ' +
+      'NO-SCROLLING NO-SIGN NO-TITLE NO-TOPOFPAGE NO-ZERO NODE NODES NON-UNICODE NON-UNIQUE NOT ' +
+      'NP NS NULL NUMBER NUMC O OBJECT OBJECTS OBLIGATORY OCCURRENCE OCCURRENCES OCCURS OF OFF ' +
+      'OFFSET OLE ON ONLY OPEN OPTION OPTIONAL OPTIONS OR ORACLE ORDER OTHER OTHERS OUT OUTER ' +
+      'OUTPUT OUTPUT-LENGTH OVERFLOW OVERLAY PACK PACKAGE PAD PADDING PAGE PAGES PARAMETER ' +
+      'PARAMETER-TABLE PARAMETERS PART PARTIALLY PATTERN PERCENTAGE PERFORM PERFORMING PERSON PF ' +
+      'PF-STATUS PINK PLACES POOL POS_HIGH POS_LOW POSITION PRAGMAS PRECOMPILED PREFERRED ' +
+      'PRESERVING PRIMARY PRINT PRINT-CONTROL PRIORITY PRIVATE PROCEDURE PROCESS PROGRAM ' +
+      'PROPERTY PROTECTED PROVIDE PUBLIC PUSH PUSHBUTTON PUT QUAN QUEUE-ONLY QUICKINFO ' +
+      'RADIOBUTTON RAISE RAISING RANGE RANGES RAW READ READ-ONLY READER RECEIVE RECEIVED ' +
+      'RECEIVER RECEIVING RED REDEFINITION REDUCE REDUCED REF REFERENCE REFRESH REGEX REJECT ' +
+      'REMOTE RENAMING REPLACE REPLACEMENT REPLACING REPORT REQUEST REQUESTED RESERVE RESET ' +
+      'RESOLUTION RESPECTING RESPONSIBLE RESULT RESULTS RESUMABLE RESUME RETRY RETURN RETURNCODE ' +
+      'RETURNING RETURNS RIGHT RIGHT-JUSTIFIED RIGHTPLUS RIGHTSPACE RISK RMC_COMMUNICATION_FAILURE ' +
+      'RMC_INVALID_STATUS RMC_SYSTEM_FAILURE ROLE ROLLBACK ROUND ROWS RPAD RTRIM RUN SAP SAP-SPOOL ' +
+      'SAVING SCALE_PRESERVING SCALE_PRESERVING_SCIENTIFIC SCAN SCIENTIFIC SCIENTIFIC_WITH_LEADING_ZERO ' +
+      'SCREEN SCROLL SCROLL-BOUNDARY SCROLLING SEARCH SECONDARY SECONDS SECTION SELECT SELECT-OPTIONS ' +
+      'SELECTION SELECTION-SCREEN SELECTION-SET SELECTION-SETS SELECTION-TABLE SELECTIONS SEND ' +
+      'SEPARATE SEPARATED SET SHARED SHIFT SHORT SHORTDUMP-ID SIGN SIGN_AS_POSTFIX SIMPLE SINGLE SIZE ' +
+      'SKIP SKIPPING SMART SOME SORT SORTABLE SORTED SOURCE SPACE SPECIFIED SPLIT SPOOL SPOTS SQL ' +
+      'SQLSCRIPT SSTRING STABLE STAMP STANDARD START-OF-SELECTION STARTING STATE STATEMENT ' +
+      'STATEMENTS STATIC STATICS STATUSINFO STEP-LOOP STOP STRUCTURE STRUCTURES STYLE ' +
+      'SUBKEY SUBMATCHES SUBMIT SUBROUTINE SUBSCREEN SUBSTRING SUBTRACT SUBTRACT-CORRESPONDING ' +
+      'SUFFIX SUM SUMMARY SUMMING SUPPLIED SUPPLY SUPPRESS SWITCH SWITCHSTATES SYBASE SYMBOL ' +
+      'SYNCPOINTS SYNTAX SYNTAX-CHECK SYNTAX-TRACE SYSTEM-CALL SYSTEM-EXCEPTIONS SYSTEM-EXIT ' +
+      'TAB TABBED TABLE TABLES TABLEVIEW TABSTRIP TARGET TASK TASKS TEST TEST-INJECTION ' +
+      'TEST-SEAM TESTING TEXT TEXTPOOL THEN THROW TIME TIMES TIMESTAMP TIMEZONE TIMS TIMS_IS_VALID ' +
+      'TITLE TITLE-LINES TITLEBAR ?TO TO TOKENIZATION TOKENS TOP-LINES TOP-OF-PAGE TRACE-FILE ' +
+      'TRACE-TABLE TRAILING TRANSACTION TRANSFER TRANSFORMATION TRANSLATE TRANSPORTING TRMAC ' +
+      'TRUNCATE TRUNCATION TRY TSTMP_ADD_SECONDS TSTMP_CURRENT_UTCTIMESTAMP TSTMP_IS_VALID ' +
+      'TSTMP_SECONDS_BETWEEN TSTMP_TO_DATS TSTMP_TO_DST TSTMP_TO_TIMS TYPE TYPE-POOL TYPE-POOLS ' +
+      'TYPES ULINE UNASSIGN UNDER UNICODE UNION UNIQUE UNIT UNIT_CONVERSION UNIX UNPACK UNTIL ' +
+      'UNWIND UP UPDATE UPPER USER USER-COMMAND USING UTF-8 VALID VALUE VALUE-REQUEST VALUES ' +
+      'VARIANT VARY VARYING VERIFICATION-MESSAGE VERSION VIA VIEW VISIBLE WAIT WARNING WHEN ' +
+      'WHENEVER WHERE WHILE WIDTH WINDOW WINDOWS WITH WITH-HEADING WITH-TITLE WITHOUT WORD ' +
+      'WORK WRITE WRITER XML XSD YELLOW YES YYMMDD Z ZERO ZONE',
       literal: 'TRUE FALSE NULL',
     },
     contains: [
@@ -511,23 +600,26 @@ export default function DiffViewer({
   const canRedo = historyIndex < history.length - 1;
 
   return (
-    <div className="bg-white border rounded-lg overflow-hidden h-full flex flex-col">
+    <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden h-full flex flex-col shadow-sm transition-all">
       {/* Header with summary and controls */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b">
+      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-zinc-200">
         <div className="flex items-center space-x-5">
           {!hasChanges ? (
-            <div className="text-blue-600 font-medium text-base">
+            <div className="text-indigo-600 font-medium text-base flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
               Files are identical
             </div>
           ) : (
             <>
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                <span className="text-green-700 font-medium text-base">{diffResult.stats.additions} additions</span>
+                <div className="w-3 h-3 rounded-full bg-emerald-500 mr-2"></div>
+                <span className="text-emerald-700 font-medium text-base">{diffResult.stats.additions} additions</span>
               </div>
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                <span className="text-red-700 font-medium text-base">{diffResult.stats.deletions} deletions</span>
+                <div className="w-3 h-3 rounded-full bg-rose-500 mr-2"></div>
+                <span className="text-rose-700 font-medium text-base">{diffResult.stats.deletions} deletions</span>
               </div>
             </>
           )}
@@ -537,12 +629,12 @@ export default function DiffViewer({
           {/* Navigation controls - always visible when there are changes */}
           {hasChanges && (
             <div className="flex items-center space-x-2">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-zinc-600 hidden md:block">
                 {selectedChunk !== null ? `Change ${selectedChunk + 1} of ${diffResult.chunks.filter(chunk => chunkHasDifferences(chunk)).length}` : ''}
               </div>
               <button 
                 onClick={navigatePrevChunk}
-                className="px-2 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded flex items-center"
+                className="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-md flex items-center transition-colors font-medium"
                 aria-label="Previous change"
                 disabled={!hasChanges}
               >
@@ -553,7 +645,7 @@ export default function DiffViewer({
               </button>
               <button 
                 onClick={navigateNextChunk}
-                className="px-2 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded flex items-center"
+                className="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-md flex items-center transition-colors font-medium"
                 aria-label="Next change"
                 disabled={!hasChanges}
               >
@@ -569,8 +661,10 @@ export default function DiffViewer({
           <div className="flex items-center space-x-2">
             {/* Undo button */}
             <button
-              className={`px-3 py-1 text-sm rounded flex items-center ${
-                canUndo ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              className={`px-3 py-1.5 text-sm rounded-md flex items-center transition-colors ${
+                canUndo 
+                  ? 'bg-zinc-100 text-zinc-800 hover:bg-zinc-200' 
+                  : 'bg-zinc-100 text-zinc-400 cursor-not-allowed opacity-70'
               }`}
               onClick={handleUndo}
               disabled={!canUndo}
@@ -584,8 +678,10 @@ export default function DiffViewer({
             
             {/* Redo button */}
             <button
-              className={`px-3 py-1 text-sm rounded flex items-center ${
-                canRedo ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              className={`px-3 py-1.5 text-sm rounded-md flex items-center transition-colors ${
+                canRedo 
+                  ? 'bg-zinc-100 text-zinc-800 hover:bg-zinc-200' 
+                  : 'bg-zinc-100 text-zinc-400 cursor-not-allowed opacity-70'
               }`}
               onClick={handleRedo}
               disabled={!canRedo}
@@ -599,7 +695,7 @@ export default function DiffViewer({
             
             {/* Reset button */}
             <button
-              className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded"
+              className="px-3 py-1.5 text-sm bg-indigo-600 text-white hover:bg-indigo-700 rounded-md transition-colors shadow-sm"
               onClick={handleReset}
             >
               Reset Comparison
@@ -609,26 +705,26 @@ export default function DiffViewer({
       </div>
       
       {/* File headers with copy buttons */}
-      <div className="flex bg-gray-100 text-gray-700 text-sm border-b">
-        <div className="w-1/2 py-1 px-4 font-medium border-r text-gray-800 flex justify-between items-center">
+      <div className="flex bg-zinc-50 text-zinc-700 text-sm border-b border-zinc-200">
+        <div className="w-1/2 py-2 px-4 font-medium border-r border-zinc-200 text-zinc-800 flex justify-between items-center">
           <span>Original</span>
           <div className="flex items-center">
-            <span className="text-xs text-gray-500 mr-2">{diffResult.stats.totalLeft} lines</span>
+            <span className="text-xs text-zinc-500 mr-2">{diffResult.stats.totalLeft} lines</span>
             <button 
               onClick={copyLeftContent}
-              className="px-2 py-0.5 text-xs bg-gray-200 hover:bg-gray-300 rounded"
+              className="px-2 py-1 text-xs bg-zinc-200 hover:bg-zinc-300 rounded-md transition-colors"
             >
               Copy
             </button>
           </div>
         </div>
-        <div className="w-1/2 py-1 px-4 font-medium text-gray-800 flex justify-between items-center">
+        <div className="w-1/2 py-2 px-4 font-medium text-zinc-800 flex justify-between items-center">
           <span>Modified</span>
           <div className="flex items-center">
-            <span className="text-xs text-gray-500 mr-2">{diffResult.stats.totalRight} lines</span>
+            <span className="text-xs text-zinc-500 mr-2">{diffResult.stats.totalRight} lines</span>
             <button 
               onClick={copyRightContent}
-              className="px-2 py-0.5 text-xs bg-gray-200 hover:bg-gray-300 rounded"
+              className="px-2 py-1 text-xs bg-zinc-200 hover:bg-zinc-300 rounded-md transition-colors"
             >
               Copy
             </button>
@@ -641,7 +737,7 @@ export default function DiffViewer({
         {/* Left pane */}
         <div 
           ref={leftPaneRef}
-          className="w-1/2 overflow-auto border-r"
+          className="w-1/2 overflow-auto border-r border-zinc-200"
           style={{ height: '100%' }}
         >
           {sortedChunks.map((chunk, chunkIndex) => {
@@ -652,13 +748,25 @@ export default function DiffViewer({
                 key={`chunk-left-${chunkIndex}`}
                 ref={(el) => { chunkRefs.current[chunkIndex] = el; }}
                 className={`${
-                  selectedChunk === chunkIndex ? 'ring-2 ring-blue-500' : ''
-                } ${chunkIndex > 0 ? 'border-t border-gray-200' : ''}`}
+                  selectedChunk === chunkIndex ? 'ring-2 ring-indigo-500' : ''
+                } ${chunkIndex > 0 ? 'border-t border-zinc-200' : ''}`}
                 onClick={hasDifferences ? () => handleChunkClick(chunkIndex) : undefined}
               >
                 {/* Chunk header - only show for chunks with differences */}
-                <div className="bg-gray-100 px-3 py-1 text-xs text-gray-700 flex justify-between items-center">
-                  <span className="text-red-600 font-medium">
+                <div 
+                  className={`bg-zinc-50 px-3 py-1.5 text-xs text-zinc-700 flex justify-between items-center ${
+                    selectedChunk === chunkIndex ? 'cursor-pointer' : ''
+                  }`}
+                  onDoubleClick={(e) => {
+                    // Only trigger if this chunk is already selected
+                    if (selectedChunk === chunkIndex) {
+                      e.stopPropagation();
+                      mergeLeftToRight(chunkIndex);
+                    }
+                  }}
+                  title={selectedChunk === chunkIndex ? "Double-click to merge to right" : ""}
+                >
+                  <span className="text-rose-600 font-medium">
                     {chunk.deletions > 0 ? `−${chunk.deletions} ${chunk.deletions === 1 ? 'removal' : 'removals'}` : ''}
                   </span>
                   
@@ -670,22 +778,35 @@ export default function DiffViewer({
                           e.stopPropagation();
                           mergeLeftToRight(chunkIndex);
                         }}
-                        className="px-2 py-0.5 text-xs bg-red-500 text-white hover:bg-red-600 rounded"
+                        className="px-3 py-2 text-sm bg-rose-500 text-white hover:bg-rose-600 rounded-md transition-colors shadow-sm flex items-center font-medium"
                       >
                         Merge to right
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1.5">
+                          <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
+                        </svg>
                       </button>
                     </div>
                   )}
                 </div>
                 
                 {/* Chunk content */}
-                <div>
+                <div
+                  onDoubleClick={(e) => {
+                    // Only trigger if this chunk is already selected
+                    if (selectedChunk === chunkIndex) {
+                      e.stopPropagation();
+                      mergeLeftToRight(chunkIndex);
+                    }
+                  }}
+                  className={selectedChunk === chunkIndex ? 'cursor-pointer' : ''}
+                  title={selectedChunk === chunkIndex ? "Double-click to merge to right" : ""}
+                >
                   {chunk.lines.map((line, lineIndex) => (
                     <div 
                       key={`line-left-${chunkIndex}-${lineIndex}`}
                       className={`flex ${getLineClass(line.type, 'left')} cursor-pointer`}
                     >
-                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-zinc-500 select-none border-r border-zinc-200 bg-zinc-50 text-xs">
                         {line.lineNumber.left || ' '}
                       </div>
                       <div className="w-full overflow-x-auto">
@@ -716,7 +837,7 @@ export default function DiffViewer({
                       key={`line-left-${chunkIndex}-${lineIndex}`}
                       className="flex"
                     >
-                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-zinc-500 select-none border-r border-zinc-200 bg-zinc-50 text-xs">
                         {line.lineNumber.left || ' '}
                       </div>
                       <div className="w-full overflow-x-auto">
@@ -751,13 +872,25 @@ export default function DiffViewer({
               <div 
                 key={`chunk-right-${chunkIndex}`}
                 className={`${
-                  selectedChunk === chunkIndex ? 'ring-2 ring-blue-500' : ''
-                } ${chunkIndex > 0 ? 'border-t border-gray-200' : ''}`}
+                  selectedChunk === chunkIndex ? 'ring-2 ring-indigo-500' : ''
+                } ${chunkIndex > 0 ? 'border-t border-zinc-200' : ''}`}
                 onClick={hasDifferences ? () => handleChunkClick(chunkIndex) : undefined}
               >
                 {/* Chunk header - only show for chunks with differences */}
-                <div className="bg-gray-100 px-3 py-1 text-xs text-gray-700 flex justify-between items-center">
-                  <span className="text-green-600 font-medium">
+                <div 
+                  className={`bg-zinc-50 px-3 py-1.5 text-xs text-zinc-700 flex justify-between items-center ${
+                    selectedChunk === chunkIndex ? 'cursor-pointer' : ''
+                  }`}
+                  onDoubleClick={(e) => {
+                    // Only trigger if this chunk is already selected
+                    if (selectedChunk === chunkIndex) {
+                      e.stopPropagation();
+                      mergeRightToLeft(chunkIndex);
+                    }
+                  }}
+                  title={selectedChunk === chunkIndex ? "Double-click to merge to left" : ""}
+                >
+                  <span className="text-emerald-600 font-medium">
                     {chunk.additions > 0 ? `+${chunk.additions} ${chunk.additions === 1 ? 'addition' : 'additions'}` : ''}
                   </span>
                   
@@ -769,8 +902,11 @@ export default function DiffViewer({
                           e.stopPropagation();
                           mergeRightToLeft(chunkIndex);
                         }}
-                        className="px-2 py-0.5 text-xs bg-green-500 text-white hover:bg-green-600 rounded"
+                        className="px-3 py-2 text-sm bg-emerald-500 text-white hover:bg-emerald-600 rounded-md transition-colors shadow-sm flex items-center font-medium"
                       >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1.5">
+                          <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
+                        </svg>
                         Merge to left
                       </button>
                     </div>
@@ -778,13 +914,23 @@ export default function DiffViewer({
                 </div>
                 
                 {/* Chunk content */}
-                <div>
+                <div
+                  onDoubleClick={(e) => {
+                    // Only trigger if this chunk is already selected
+                    if (selectedChunk === chunkIndex) {
+                      e.stopPropagation();
+                      mergeRightToLeft(chunkIndex);
+                    }
+                  }}
+                  className={selectedChunk === chunkIndex ? 'cursor-pointer' : ''}
+                  title={selectedChunk === chunkIndex ? "Double-click to merge to left" : ""}
+                >
                   {chunk.lines.map((line, lineIndex) => (
                     <div 
                       key={`line-right-${chunkIndex}-${lineIndex}`}
                       className={`flex ${getLineClass(line.type, 'right')} cursor-pointer`}
                     >
-                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-zinc-500 select-none border-r border-zinc-200 bg-zinc-50 text-xs">
                         {line.lineNumber.right || ' '}
                       </div>
                       <div className="w-full overflow-x-auto">
@@ -815,7 +961,7 @@ export default function DiffViewer({
                       key={`line-right-${chunkIndex}-${lineIndex}`}
                       className="flex"
                     >
-                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-zinc-500 select-none border-r border-zinc-200 bg-zinc-50 text-xs">
                         {line.lineNumber.right || ' '}
                       </div>
                       <div className="w-full overflow-x-auto">
@@ -841,7 +987,7 @@ export default function DiffViewer({
         <div
           ref={minimapRef}
           className="absolute right-0 top-0 w-1.5 h-full"
-          style={{ background: '#f5f5f5' }}
+          style={{ background: '#f9fafb' }}
         >
           {sortedChunks.map((chunk, index) => {
             // Calculate position relative to file size
@@ -857,13 +1003,13 @@ export default function DiffViewer({
             if (!hasDifferences) return null;
             
             // Determine color based on chunk content
-            let color = '#ccc'; // Default gray
+            let color = '#d4d4d8'; // Default zinc-300
             if (chunk.additions > 0 && chunk.deletions > 0) {
-              color = '#f9d876'; // Yellow for mixed changes
+              color = '#fbbf24'; // Amber-400 for mixed changes
             } else if (chunk.additions > 0) {
-              color = '#4ac26b'; // Green for additions
+              color = '#34d399'; // Emerald-400 for additions
             } else if (chunk.deletions > 0) {
-              color = '#f85149'; // Red for deletions
+              color = '#f87171'; // Rose-400 for deletions
             }
             
             // Highlight selected chunk
@@ -876,7 +1022,7 @@ export default function DiffViewer({
                 style={{
                   top: `${topPercent}%`,
                   height: `${Math.max(heightPercent, 1)}%`, // At least 1% height for visibility
-                  backgroundColor: isSelected ? '#2196f3' : color,
+                  backgroundColor: isSelected ? '#6366f1' : color, // Indigo-500 for selected
                 }}
                 onClick={() => navigateToChunk(index)}
               />
@@ -1111,19 +1257,19 @@ function applyWordDiffHighlighting(textNodes: Text[], diffs: [number, string][],
 // Helper function to get class based on line type and side
 function getLineClass(type: string, side: 'left' | 'right') {
   if (type === 'context') {
-    return 'bg-[#fffbf0]'; // Light yellow for context lines
+    return 'bg-amber-50'; // Light amber for context lines
   }
   
   if (side === 'left') {
     switch (type) {
-      case 'removed': return 'bg-[#ffecec]'; // Light red for removed lines
-      case 'modified': return 'bg-[#ffecec]'; // Light red for modified lines on left
+      case 'removed': return 'bg-rose-50'; // Light rose for removed lines
+      case 'modified': return 'bg-rose-50'; // Light rose for modified lines on left
       default: return '';
     }
   } else {
     switch (type) {
-      case 'added': return 'bg-[#e6ffed]'; // Light green for added lines
-      case 'modified': return 'bg-[#e6ffed]'; // Light green for modified lines on right
+      case 'added': return 'bg-emerald-50'; // Light emerald for added lines
+      case 'modified': return 'bg-emerald-50'; // Light emerald for modified lines on right
       default: return '';
     }
   }

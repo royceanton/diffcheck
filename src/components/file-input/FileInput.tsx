@@ -87,11 +87,11 @@ export default function FileInput({ label, content, onChange, language = 'abap' 
         base: 'vs',
         inherit: true,
         rules: [
-          { token: 'keyword', foreground: '0000ff', fontStyle: 'bold' },
-          { token: 'comment', foreground: '008000' },
-          { token: 'string', foreground: 'a31515' },
+          { token: 'keyword', foreground: '6366f1', fontStyle: 'bold' }, // Indigo 500
+          { token: 'comment', foreground: '84cc16' }, // Lime 500
+          { token: 'string', foreground: 'ec4899' }, // Pink 500
           { token: 'identifier', foreground: '000000' },
-          { token: 'number', foreground: '098658' }
+          { token: 'number', foreground: '8b5cf6' } // Violet 500
         ],
         colors: {
           'editor.foreground': '#000000',
@@ -127,9 +127,12 @@ export default function FileInput({ label, content, onChange, language = 'abap' 
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)] border rounded-lg overflow-hidden bg-white shadow-sm">
-      <div className="flex justify-between items-center p-2 bg-gray-50 border-b">
-        <h3 className="font-medium text-sm text-gray-800">{label}</h3>
+    <div className="flex flex-col h-[calc(100vh-140px)] border border-zinc-200 rounded-lg overflow-hidden bg-white shadow-sm transition-all hover:shadow-md">
+      <div className="flex justify-between items-center px-4 py-3 bg-white border-b border-zinc-200">
+        <h3 className="font-medium text-sm text-zinc-800">{label}</h3>
+        <div className="text-xs px-2 py-1 rounded-full bg-zinc-100 text-zinc-600 font-medium">
+          {detectLanguage(content).toUpperCase()}
+        </div>
       </div>
 
       <div className="flex-grow">
@@ -145,7 +148,7 @@ export default function FileInput({ label, content, onChange, language = 'abap' 
             fontSize: 14,
             lineNumbers: 'on',
             renderLineHighlight: 'all',
-            fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+            fontFamily: 'var(--font-geist-mono), Menlo, Monaco, "Courier New", monospace',
             fontLigatures: true,
             scrollbar: {
               vertical: 'visible',
@@ -158,13 +161,7 @@ export default function FileInput({ label, content, onChange, language = 'abap' 
             formatOnPaste: true,
             renderControlCharacters: true,
             colorDecorators: true,
-            //semanticHighlighting: false, // Disable semantic highlighting (which can cause unwanted highlighting)
             matchBrackets: 'always',
-            // Disable validators that might cause red squiggly lines
-            //'semanticValidation.enabled': false,
-            //'syntaxValidation.enabled': false,
-            //'suggestions.enabled': false, // Disable suggestions
-            //'renderValidationDecorations': 'off', // Turn off validation decorations
           }}
         />
       </div>

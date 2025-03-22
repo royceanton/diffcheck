@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DiffCheck - Code Comparison Tool",
-  description: "A simple tool to compare code and view differences",
+  title: "DeltaDiff - Modern Code Comparison Tool",
+  description: "Compare, visualize differences, and merge code changes with precision.",
 };
 
 export default function RootLayout({
@@ -23,9 +23,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="antialiased">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans bg-zinc-50 text-zinc-900`}
       >
         {children}
       </body>
