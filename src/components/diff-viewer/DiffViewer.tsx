@@ -245,9 +245,9 @@ export default function DiffViewer({
 
   // Merge selected chunk from left to right (overwrite right with left)
   const mergeLeftToRight = (chunkIndex: number) => {
-    if (!diffResult || !diffResult.chunks) return;
+    if (!sortedChunks) return;
     
-    const chunk = diffResult.chunks[chunkIndex];
+    const chunk = sortedChunks[chunkIndex];
     if (!chunk) return;
     
     // Get all the lines from this chunk that exist in the left side
@@ -325,9 +325,9 @@ export default function DiffViewer({
   
   // Merge selected chunk from right to left (overwrite left with right)
   const mergeRightToLeft = (chunkIndex: number) => {
-    if (!diffResult || !diffResult.chunks) return;
+    if (!sortedChunks) return;
     
-    const chunk = diffResult.chunks[chunkIndex];
+    const chunk = sortedChunks[chunkIndex];
     if (!chunk) return;
     
     // Get all the lines from this chunk that exist in the right side
@@ -602,7 +602,7 @@ export default function DiffViewer({
                         }}
                         className="px-2 py-0.5 text-xs bg-red-500 text-white hover:bg-red-600 rounded"
                       >
-                        Merge change ←
+                        Merge to right
                       </button>
                     </div>
                   )}
@@ -701,7 +701,7 @@ export default function DiffViewer({
                         }}
                         className="px-2 py-0.5 text-xs bg-green-500 text-white hover:bg-green-600 rounded"
                       >
-                        Merge change →
+                        Merge to left
                       </button>
                     </div>
                   )}
