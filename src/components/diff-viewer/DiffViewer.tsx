@@ -174,28 +174,65 @@ export default function DiffViewer({
   
   // Navigate to chunks
   const navigateToChunk = (index: number) => {
-    if (index >= 0 && index < chunkRefs.current.length) {
-      const chunk = chunkRefs.current[index];
+    // Get only chunks that have differences
+    const diffChunks = sortedChunks
+      .map((chunk, idx) => ({ chunk, idx }))
+      .filter(({ chunk }) => chunkHasDifferences(chunk));
+    
+    if (diffChunks.length === 0) return;
+    
+    // If index is provided and valid, use it
+    if (index >= 0 && index < diffChunks.length) {
+      const { idx } = diffChunks[index];
+      const chunk = chunkRefs.current[idx];
       if (chunk) {
         chunk.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        setActiveChunk(index);
-        setSelectedChunk(index);
+        setActiveChunk(idx);
+        setSelectedChunk(idx);
       }
     }
   };
   
   const navigatePrevChunk = () => {
-    if (selectedChunk !== null && selectedChunk > 0) {
-      navigateToChunk(selectedChunk - 1);
-    } else if (diffResult.chunks.length > 0) {
-      navigateToChunk(0);
+    // Get only chunks that have differences
+    const diffChunks = sortedChunks
+      .map((chunk, idx) => ({ chunk, idx }))
+      .filter(({ chunk }) => chunkHasDifferences(chunk));
+    
+    if (diffChunks.length === 0) return;
+    
+    // Find the current selected chunk in the diffChunks array
+    const currentIndex = diffChunks.findIndex(({ idx }) => idx === selectedChunk);
+    
+    // If there's a selected chunk and it's not the first one
+    if (currentIndex > 0) {
+      // Go to previous diff chunk
+      const { idx } = diffChunks[currentIndex - 1];
+      navigateToChunk(currentIndex - 1);
+    } else {
+      // Wrap around to the last chunk if at the beginning
+      const { idx } = diffChunks[diffChunks.length - 1];
+      navigateToChunk(diffChunks.length - 1);
     }
   };
   
   const navigateNextChunk = () => {
-    if (selectedChunk !== null && selectedChunk < diffResult.chunks.length - 1) {
-      navigateToChunk(selectedChunk + 1);
-    } else if (diffResult.chunks.length > 0) {
+    // Get only chunks that have differences
+    const diffChunks = sortedChunks
+      .map((chunk, idx) => ({ chunk, idx }))
+      .filter(({ chunk }) => chunkHasDifferences(chunk));
+    
+    if (diffChunks.length === 0) return;
+    
+    // Find the current selected chunk in the diffChunks array
+    const currentIndex = diffChunks.findIndex(({ idx }) => idx === selectedChunk);
+    
+    // If there's a selected chunk and it's not the last one
+    if (currentIndex >= 0 && currentIndex < diffChunks.length - 1) {
+      // Go to next diff chunk
+      navigateToChunk(currentIndex + 1);
+    } else {
+      // Wrap around to the first chunk if at the end or no selection
       navigateToChunk(0);
     }
   };
@@ -427,16 +464,17 @@ export default function DiffViewer({
         </div>
         
         <div className="flex items-center space-x-4">
-          {/* Navigation controls */}
-          {hasChanges && selectedChunk !== null && (
+          {/* Navigation controls - always visible when there are changes */}
+          {hasChanges && (
             <div className="flex items-center space-x-2">
               <div className="text-sm text-gray-700">
-                Change {selectedChunk + 1} of {diffResult.chunks.length}
+                {selectedChunk !== null ? `Change ${selectedChunk + 1} of ${diffResult.chunks.filter(chunk => chunkHasDifferences(chunk)).length}` : ''}
               </div>
               <button 
                 onClick={navigatePrevChunk}
-                className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded flex items-center"
+                className="px-2 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded flex items-center"
                 aria-label="Previous change"
+                disabled={!hasChanges}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1">
                   <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
@@ -445,8 +483,9 @@ export default function DiffViewer({
               </button>
               <button 
                 onClick={navigateNextChunk}
-                className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded flex items-center"
+                className="px-2 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded flex items-center"
                 aria-label="Next change"
+                disabled={!hasChanges}
               >
                 Next
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1">
