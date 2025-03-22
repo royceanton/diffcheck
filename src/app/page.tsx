@@ -50,7 +50,7 @@ export default function Home() {
   // Simple notification to show merge was successful
   const showMergeNotification = () => {
     const notification = document.createElement('div');
-    notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
+    notification.className = 'fixed bottom-4 right-4 bg-indigo-500 text-white px-4 py-2 rounded-md shadow-lg z-50 animate-in fade-in slide-in-from-bottom-5';
     notification.textContent = 'Changes merged successfully!';
     document.body.appendChild(notification);
     
@@ -64,15 +64,20 @@ export default function Home() {
   };
   
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm text-gray-800 p-4">
-        <h1 className="text-2xl font-bold text-blue-600">DiffCheck</h1>
+    <div className="flex flex-col min-h-screen bg-zinc-50">
+      <header className="bg-white border-b border-zinc-200 shadow-sm py-4 px-6">
+        <div className="max-w-screen-2xl mx-auto flex items-center justify-between">
+          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-violet-600">
+            DeltaDiff
+          </h1>
+          <span className="text-sm text-zinc-500">Code Comparison Tool</span>
+        </div>
       </header>
       
-      <main className="flex-grow flex flex-col p-4 max-w-screen-2xl mx-auto w-full">
+      <main className="flex-grow flex flex-col p-6 max-w-screen-2xl mx-auto w-full">
         {/* Show either input or diff view, not both */}
         {!diffResult ? (
-          <div className="flex gap-4 flex-col md:flex-row h-full">
+          <div className="flex gap-6 flex-col md:flex-row h-full">
             <div className="flex-1">
               <FileInput
                 label="Original File"
@@ -102,6 +107,13 @@ export default function Home() {
           </div>
         )}
       </main>
+      
+      {/* Add a sleek footer */}
+      <footer className="py-4 text-center text-sm text-zinc-500 border-t border-zinc-200">
+        <div className="max-w-screen-2xl mx-auto">
+          DeltaDiff &copy; {new Date().getFullYear()} • Fast code comparison and merging
+        </div>
+      </footer>
     </div>
   );
 }

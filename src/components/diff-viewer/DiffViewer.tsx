@@ -600,23 +600,26 @@ export default function DiffViewer({
   const canRedo = historyIndex < history.length - 1;
 
   return (
-    <div className="bg-white border rounded-lg overflow-hidden h-full flex flex-col">
+    <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden h-full flex flex-col shadow-sm transition-all">
       {/* Header with summary and controls */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b">
+      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-zinc-200">
         <div className="flex items-center space-x-5">
           {!hasChanges ? (
-            <div className="text-blue-600 font-medium text-base">
+            <div className="text-indigo-600 font-medium text-base flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
               Files are identical
             </div>
           ) : (
             <>
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                <span className="text-green-700 font-medium text-base">{diffResult.stats.additions} additions</span>
+                <div className="w-3 h-3 rounded-full bg-emerald-500 mr-2"></div>
+                <span className="text-emerald-700 font-medium text-base">{diffResult.stats.additions} additions</span>
               </div>
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                <span className="text-red-700 font-medium text-base">{diffResult.stats.deletions} deletions</span>
+                <div className="w-3 h-3 rounded-full bg-rose-500 mr-2"></div>
+                <span className="text-rose-700 font-medium text-base">{diffResult.stats.deletions} deletions</span>
               </div>
             </>
           )}
@@ -626,12 +629,12 @@ export default function DiffViewer({
           {/* Navigation controls - always visible when there are changes */}
           {hasChanges && (
             <div className="flex items-center space-x-2">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-zinc-600 hidden md:block">
                 {selectedChunk !== null ? `Change ${selectedChunk + 1} of ${diffResult.chunks.filter(chunk => chunkHasDifferences(chunk)).length}` : ''}
               </div>
               <button 
                 onClick={navigatePrevChunk}
-                className="px-2 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded flex items-center"
+                className="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-md flex items-center transition-colors font-medium"
                 aria-label="Previous change"
                 disabled={!hasChanges}
               >
@@ -642,7 +645,7 @@ export default function DiffViewer({
               </button>
               <button 
                 onClick={navigateNextChunk}
-                className="px-2 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded flex items-center"
+                className="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-md flex items-center transition-colors font-medium"
                 aria-label="Next change"
                 disabled={!hasChanges}
               >
@@ -658,8 +661,10 @@ export default function DiffViewer({
           <div className="flex items-center space-x-2">
             {/* Undo button */}
             <button
-              className={`px-3 py-1 text-sm rounded flex items-center ${
-                canUndo ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              className={`px-3 py-1.5 text-sm rounded-md flex items-center transition-colors ${
+                canUndo 
+                  ? 'bg-zinc-100 text-zinc-800 hover:bg-zinc-200' 
+                  : 'bg-zinc-100 text-zinc-400 cursor-not-allowed opacity-70'
               }`}
               onClick={handleUndo}
               disabled={!canUndo}
@@ -673,8 +678,10 @@ export default function DiffViewer({
             
             {/* Redo button */}
             <button
-              className={`px-3 py-1 text-sm rounded flex items-center ${
-                canRedo ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              className={`px-3 py-1.5 text-sm rounded-md flex items-center transition-colors ${
+                canRedo 
+                  ? 'bg-zinc-100 text-zinc-800 hover:bg-zinc-200' 
+                  : 'bg-zinc-100 text-zinc-400 cursor-not-allowed opacity-70'
               }`}
               onClick={handleRedo}
               disabled={!canRedo}
@@ -688,7 +695,7 @@ export default function DiffViewer({
             
             {/* Reset button */}
             <button
-              className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded"
+              className="px-3 py-1.5 text-sm bg-indigo-600 text-white hover:bg-indigo-700 rounded-md transition-colors shadow-sm"
               onClick={handleReset}
             >
               Reset Comparison
@@ -698,26 +705,26 @@ export default function DiffViewer({
       </div>
       
       {/* File headers with copy buttons */}
-      <div className="flex bg-gray-100 text-gray-700 text-sm border-b">
-        <div className="w-1/2 py-1 px-4 font-medium border-r text-gray-800 flex justify-between items-center">
+      <div className="flex bg-zinc-50 text-zinc-700 text-sm border-b border-zinc-200">
+        <div className="w-1/2 py-2 px-4 font-medium border-r border-zinc-200 text-zinc-800 flex justify-between items-center">
           <span>Original</span>
           <div className="flex items-center">
-            <span className="text-xs text-gray-500 mr-2">{diffResult.stats.totalLeft} lines</span>
+            <span className="text-xs text-zinc-500 mr-2">{diffResult.stats.totalLeft} lines</span>
             <button 
               onClick={copyLeftContent}
-              className="px-2 py-0.5 text-xs bg-gray-200 hover:bg-gray-300 rounded"
+              className="px-2 py-1 text-xs bg-zinc-200 hover:bg-zinc-300 rounded-md transition-colors"
             >
               Copy
             </button>
           </div>
         </div>
-        <div className="w-1/2 py-1 px-4 font-medium text-gray-800 flex justify-between items-center">
+        <div className="w-1/2 py-2 px-4 font-medium text-zinc-800 flex justify-between items-center">
           <span>Modified</span>
           <div className="flex items-center">
-            <span className="text-xs text-gray-500 mr-2">{diffResult.stats.totalRight} lines</span>
+            <span className="text-xs text-zinc-500 mr-2">{diffResult.stats.totalRight} lines</span>
             <button 
               onClick={copyRightContent}
-              className="px-2 py-0.5 text-xs bg-gray-200 hover:bg-gray-300 rounded"
+              className="px-2 py-1 text-xs bg-zinc-200 hover:bg-zinc-300 rounded-md transition-colors"
             >
               Copy
             </button>
@@ -730,7 +737,7 @@ export default function DiffViewer({
         {/* Left pane */}
         <div 
           ref={leftPaneRef}
-          className="w-1/2 overflow-auto border-r"
+          className="w-1/2 overflow-auto border-r border-zinc-200"
           style={{ height: '100%' }}
         >
           {sortedChunks.map((chunk, chunkIndex) => {
@@ -741,13 +748,13 @@ export default function DiffViewer({
                 key={`chunk-left-${chunkIndex}`}
                 ref={(el) => { chunkRefs.current[chunkIndex] = el; }}
                 className={`${
-                  selectedChunk === chunkIndex ? 'ring-2 ring-blue-500' : ''
-                } ${chunkIndex > 0 ? 'border-t border-gray-200' : ''}`}
+                  selectedChunk === chunkIndex ? 'ring-2 ring-indigo-500' : ''
+                } ${chunkIndex > 0 ? 'border-t border-zinc-200' : ''}`}
                 onClick={hasDifferences ? () => handleChunkClick(chunkIndex) : undefined}
               >
                 {/* Chunk header - only show for chunks with differences */}
                 <div 
-                  className={`bg-gray-100 px-3 py-1 text-xs text-gray-700 flex justify-between items-center ${
+                  className={`bg-zinc-50 px-3 py-1.5 text-xs text-zinc-700 flex justify-between items-center ${
                     selectedChunk === chunkIndex ? 'cursor-pointer' : ''
                   }`}
                   onDoubleClick={(e) => {
@@ -759,7 +766,7 @@ export default function DiffViewer({
                   }}
                   title={selectedChunk === chunkIndex ? "Double-click to merge to right" : ""}
                 >
-                  <span className="text-red-600 font-medium">
+                  <span className="text-rose-600 font-medium">
                     {chunk.deletions > 0 ? `−${chunk.deletions} ${chunk.deletions === 1 ? 'removal' : 'removals'}` : ''}
                   </span>
                   
@@ -771,9 +778,12 @@ export default function DiffViewer({
                           e.stopPropagation();
                           mergeLeftToRight(chunkIndex);
                         }}
-                        className="px-2 py-0.5 text-xs bg-red-500 text-white hover:bg-red-600 rounded"
+                        className="px-3 py-2 text-sm bg-rose-500 text-white hover:bg-rose-600 rounded-md transition-colors shadow-sm flex items-center font-medium"
                       >
                         Merge to right
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1.5">
+                          <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
+                        </svg>
                       </button>
                     </div>
                   )}
@@ -796,7 +806,7 @@ export default function DiffViewer({
                       key={`line-left-${chunkIndex}-${lineIndex}`}
                       className={`flex ${getLineClass(line.type, 'left')} cursor-pointer`}
                     >
-                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-zinc-500 select-none border-r border-zinc-200 bg-zinc-50 text-xs">
                         {line.lineNumber.left || ' '}
                       </div>
                       <div className="w-full overflow-x-auto">
@@ -827,7 +837,7 @@ export default function DiffViewer({
                       key={`line-left-${chunkIndex}-${lineIndex}`}
                       className="flex"
                     >
-                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-zinc-500 select-none border-r border-zinc-200 bg-zinc-50 text-xs">
                         {line.lineNumber.left || ' '}
                       </div>
                       <div className="w-full overflow-x-auto">
@@ -862,13 +872,13 @@ export default function DiffViewer({
               <div 
                 key={`chunk-right-${chunkIndex}`}
                 className={`${
-                  selectedChunk === chunkIndex ? 'ring-2 ring-blue-500' : ''
-                } ${chunkIndex > 0 ? 'border-t border-gray-200' : ''}`}
+                  selectedChunk === chunkIndex ? 'ring-2 ring-indigo-500' : ''
+                } ${chunkIndex > 0 ? 'border-t border-zinc-200' : ''}`}
                 onClick={hasDifferences ? () => handleChunkClick(chunkIndex) : undefined}
               >
                 {/* Chunk header - only show for chunks with differences */}
                 <div 
-                  className={`bg-gray-100 px-3 py-1 text-xs text-gray-700 flex justify-between items-center ${
+                  className={`bg-zinc-50 px-3 py-1.5 text-xs text-zinc-700 flex justify-between items-center ${
                     selectedChunk === chunkIndex ? 'cursor-pointer' : ''
                   }`}
                   onDoubleClick={(e) => {
@@ -880,7 +890,7 @@ export default function DiffViewer({
                   }}
                   title={selectedChunk === chunkIndex ? "Double-click to merge to left" : ""}
                 >
-                  <span className="text-green-600 font-medium">
+                  <span className="text-emerald-600 font-medium">
                     {chunk.additions > 0 ? `+${chunk.additions} ${chunk.additions === 1 ? 'addition' : 'additions'}` : ''}
                   </span>
                   
@@ -892,8 +902,11 @@ export default function DiffViewer({
                           e.stopPropagation();
                           mergeRightToLeft(chunkIndex);
                         }}
-                        className="px-2 py-0.5 text-xs bg-green-500 text-white hover:bg-green-600 rounded"
+                        className="px-3 py-2 text-sm bg-emerald-500 text-white hover:bg-emerald-600 rounded-md transition-colors shadow-sm flex items-center font-medium"
                       >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1.5">
+                          <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
+                        </svg>
                         Merge to left
                       </button>
                     </div>
@@ -917,7 +930,7 @@ export default function DiffViewer({
                       key={`line-right-${chunkIndex}-${lineIndex}`}
                       className={`flex ${getLineClass(line.type, 'right')} cursor-pointer`}
                     >
-                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-zinc-500 select-none border-r border-zinc-200 bg-zinc-50 text-xs">
                         {line.lineNumber.right || ' '}
                       </div>
                       <div className="w-full overflow-x-auto">
@@ -948,7 +961,7 @@ export default function DiffViewer({
                       key={`line-right-${chunkIndex}-${lineIndex}`}
                       className="flex"
                     >
-                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-zinc-500 select-none border-r border-zinc-200 bg-zinc-50 text-xs">
                         {line.lineNumber.right || ' '}
                       </div>
                       <div className="w-full overflow-x-auto">
@@ -974,7 +987,7 @@ export default function DiffViewer({
         <div
           ref={minimapRef}
           className="absolute right-0 top-0 w-1.5 h-full"
-          style={{ background: '#f5f5f5' }}
+          style={{ background: '#f9fafb' }}
         >
           {sortedChunks.map((chunk, index) => {
             // Calculate position relative to file size
@@ -990,13 +1003,13 @@ export default function DiffViewer({
             if (!hasDifferences) return null;
             
             // Determine color based on chunk content
-            let color = '#ccc'; // Default gray
+            let color = '#d4d4d8'; // Default zinc-300
             if (chunk.additions > 0 && chunk.deletions > 0) {
-              color = '#f9d876'; // Yellow for mixed changes
+              color = '#fbbf24'; // Amber-400 for mixed changes
             } else if (chunk.additions > 0) {
-              color = '#4ac26b'; // Green for additions
+              color = '#34d399'; // Emerald-400 for additions
             } else if (chunk.deletions > 0) {
-              color = '#f85149'; // Red for deletions
+              color = '#f87171'; // Rose-400 for deletions
             }
             
             // Highlight selected chunk
@@ -1009,7 +1022,7 @@ export default function DiffViewer({
                 style={{
                   top: `${topPercent}%`,
                   height: `${Math.max(heightPercent, 1)}%`, // At least 1% height for visibility
-                  backgroundColor: isSelected ? '#2196f3' : color,
+                  backgroundColor: isSelected ? '#6366f1' : color, // Indigo-500 for selected
                 }}
                 onClick={() => navigateToChunk(index)}
               />
@@ -1244,19 +1257,19 @@ function applyWordDiffHighlighting(textNodes: Text[], diffs: [number, string][],
 // Helper function to get class based on line type and side
 function getLineClass(type: string, side: 'left' | 'right') {
   if (type === 'context') {
-    return 'bg-[#fffbf0]'; // Light yellow for context lines
+    return 'bg-amber-50'; // Light amber for context lines
   }
   
   if (side === 'left') {
     switch (type) {
-      case 'removed': return 'bg-[#ffecec]'; // Light red for removed lines
-      case 'modified': return 'bg-[#ffecec]'; // Light red for modified lines on left
+      case 'removed': return 'bg-rose-50'; // Light rose for removed lines
+      case 'modified': return 'bg-rose-50'; // Light rose for modified lines on left
       default: return '';
     }
   } else {
     switch (type) {
-      case 'added': return 'bg-[#e6ffed]'; // Light green for added lines
-      case 'modified': return 'bg-[#e6ffed]'; // Light green for modified lines on right
+      case 'added': return 'bg-emerald-50'; // Light emerald for added lines
+      case 'modified': return 'bg-emerald-50'; // Light emerald for modified lines on right
       default: return '';
     }
   }
