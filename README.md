@@ -1,49 +1,117 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# DeltaDiff - Modern Code Comparison Tool
 
-First, run the development server:
+<p align="center">
+  <img src="https://i.gyazo.com/296b51a6e23495f5530d25694f10edb6.png" alt="DeltaDiff Screenshot">
+
+</p>
+
+## 🌟 Overview
+
+**DeltaDiff** is a free, open-source code comparison tool that helps you easily visualize differences between two pieces of code. Whether you're reviewing changes, merging updates, or just trying to understand what changed, DeltaDiff makes the process simple with its intuitive, modern interface.
+
+### ✨ Key Features
+
+- **Visual Comparison**: Instantly see additions, deletions, and modifications with color coding
+- **Interactive Merging**: Easily merge changes between files with just a double-click
+- **Modern UI**: Clean, intuitive interface designed for clarity and ease of use
+- **Syntax Highlighting**: Code is properly highlighted for better readability
+- **No Account Required**: Use immediately in your browser without signup
+- **Free & Open Source**: Completely free to use and modify
+
+## 🚀 Try It Out
+
+You can use DeltaDiff in two ways:
+
+1. **Visit our website**: [URL will be added here]
+2. **Run it locally**: Follow the installation instructions below
+
+## 💻 How to Use
+
+1. **Input Your Code**: Paste your original code on the left and the modified code on the right
+2. **Review Differences**: Differences are automatically highlighted:
+   - 🟢 Green: Additions (right side)
+   - 🔴 Red: Deletions (left side)
+   - 🟠 Amber: Context lines to help you understand the surrounding code
+
+3. **Navigate Changes**: Use the "Prev" and "Next" buttons to move between differences
+4. **Merge Changes**: 
+   - Select a change by clicking on it
+   - Click "Merge to left" or "Merge to right" to apply changes
+   - Or simply double-click on the selected change to merge it
+
+<p align="center">
+  <!-- User will add UI guide image here -->
+  <em>UI guide image will be added here</em>
+</p>
+
+## ⚙️ Installation (for developers)
+
+If you want to run DeltaDiff locally:
 
 ```bash
- npx create-next-app@latest . --use-npm --typescript --eslint --tailwind --app --src-dir
+# Clone the repository
+git clone https://github.com/yourusername/deltadiff.git
+cd deltadiff
 
-# Install Monaco Editor for React (code editor component)
-npm install @monaco-editor/react
+# Install dependencies
+npm install
 
-# Install additional utilities that might be needed
-npm install lodash
-npm install @types/lodash --save-dev
-npm install highlight.js
-
-npm install diff
-npm install @types/diff --save-dev
-
+# Start the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🧩 Use Cases
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Code Reviews**: Compare different versions of code to review changes
+- **Debugging**: Identify what changed between working and non-working versions
+- **Learning**: Understand how code evolves between iterations
+- **Documentation**: Generate visual representations of code changes for documentation
+- **Collaboration**: Easily share and discuss code changes with teammates
 
-## Learn More
+## 🤔 How It Works
 
-To learn more about Next.js, take a look at the following resources:
+DeltaDiff uses an intelligent diff algorithm to identify the exact changes between two code samples. It then presents these differences in a user-friendly interface where you can:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **See**: Color-coded highlighting shows exactly what changed
+2. **Navigate**: Jump between changes with navigation controls
+3. **Merge**: Selectively apply changes in either direction
+4. **Copy**: Copy the full content from either side with a single click
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🌐 Accessibility
 
-## Deploy on Vercel
+DeltaDiff is designed with accessibility in mind:
+- Clear visual indicators
+- Keyboard navigation support
+- Responsive design that works on different screen sizes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🔧 Technologies
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built with modern web technologies:
+- Next.js
+- React
+- TailwindCSS
+- Monaco Editor
+
+## 🤝 Contributing
+
+We welcome contributions! If you'd like to help improve DeltaDiff:
+
+1. Fork the repository
+2. Create your feature branch: `git checkout -b my-new-feature`
+3. Commit your changes: `git commit -am 'Add some feature'`
+4. Push to the branch: `git push origin my-new-feature`
+5. Submit a pull request
+
+## 📄 License
+
+DeltaDiff is open source software [licensed as MIT](LICENSE).
+
+
+---
+
+<p align="center">
+  Made with ❤️ by ranton
+</p>
