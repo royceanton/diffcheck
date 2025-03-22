@@ -17,11 +17,15 @@ export default function Home() {
   }, [leftContent, rightContent]);
   
   const handleCompare = async () => {
-    const result = await import('@/lib/diff/diffAlgorithm').then(module => {
-      return module.default(leftContent, rightContent);
-    });
-    
-    setDiffResult(result);
+    try {
+      const result = await import('@/lib/diff/diffAlgorithm').then(module => {
+        return module.default(leftContent, rightContent);
+      });
+      
+      setDiffResult(result);
+    } catch (error) {
+      console.error('Error comparing files:', error);
+    }
   };
   
   const handleResetView = () => {
@@ -43,7 +47,7 @@ export default function Home() {
                 label="Original File"
                 content={leftContent}
                 onChange={setLeftContent}
-                language="javascript"
+                language="abap"
               />
             </div>
             <div className="flex-1">
@@ -51,7 +55,7 @@ export default function Home() {
                 label="Modified File"
                 content={rightContent}
                 onChange={setRightContent}
-                language="javascript"
+                language="abap"
               />
             </div>
           </div>
