@@ -1,3 +1,4 @@
+//code: src/lib/diff/diffAlgorithm.ts
 // Implementing a better diff algorithm to get closer to diffchecker.com results
 
 import { diffLines, Change } from 'diff';
@@ -33,6 +34,8 @@ export interface LineComparison {
 /**
  * A significantly improved diff algorithm that groups changes into chunks
  * similar to diffchecker.com, with proper context lines
+ * 
+ * For ABAP code, statements are pre-split by periods before being passed to this function
  */
 function diffAlgorithm(leftText: string, rightText: string): DiffResult {
   // Handle empty input
@@ -179,107 +182,20 @@ function diffAlgorithm(leftText: string, rightText: string): DiffResult {
   
   // Group changes into chunks with context
   const chunks: DiffChunk[] = [];
-  const CONTEXT_LINES = 2; // Number of context lines before and after changes
+  // Reduced context lines to 0 for ABAP statements to ensure each statement is in its own chunk
+  const CONTEXT_LINES = 0; 
   
-  let currentChunk: DiffChunk | null = null;
-  let contextBuffer: LineComparison[] = [];
-  let inChange = false;
+  // Process the raw diff to create chunks with optimal grouping for ABAP
+  processRawDiffIntoChunks(rawDiff, chunks);
   
-  // Track for stats
+  // Calculate total stats
   let totalAdditions = 0;
   let totalDeletions = 0;
   
-  // Helper to add context lines to the current chunk
-  const addContextToChunk = () => {
-    if (!currentChunk) {
-      currentChunk = { lines: [], additions: 0, deletions: 0 };
-    }
-    
-    // Add buffered context lines, but mark them as context
-    for (const line of contextBuffer) {
-      currentChunk.lines.push({
-        ...line,
-        type: 'context',
-      });
-    }
-    
-    // Clear buffer
-    contextBuffer = [];
-  };
-  
-  // Process the raw diff to create chunks with context
-  for (let i = 0; i < rawDiff.length; i++) {
-    const line = rawDiff[i];
-    
-    // If this is a changed line
-    if (line.type === 'added' || line.type === 'removed' || line.type === 'modified') {
-      if (!inChange) {
-        // Starting a new change
-        inChange = true;
-        
-        // Add buffered context
-        addContextToChunk();
-      }
-      
-      // Create chunk if needed
-      if (!currentChunk) {
-        currentChunk = { lines: [], additions: 0, deletions: 0 };
-      }
-      
-      // Add the line to the current chunk
-      currentChunk.lines.push(line);
-      
-      // Update statistics
-      if (line.type === 'added') {
-        currentChunk.additions++;
-        totalAdditions++;
-      } else if (line.type === 'removed') {
-        currentChunk.deletions++;
-        totalDeletions++;
-      } else if (line.type === 'modified') {
-        // Modified counts as both addition and deletion
-        currentChunk.additions++;
-        currentChunk.deletions++;
-        totalAdditions++;
-        totalDeletions++;
-      }
-    } else {
-      // This is an unchanged line
-      
-      if (inChange) {
-        // Buffer up to CONTEXT_LINES trailing context
-        contextBuffer.push(line);
-        
-        // If we've buffered enough context or reached end, end the change
-        if (contextBuffer.length >= CONTEXT_LINES || i === rawDiff.length - 1) {
-          inChange = false;
-          
-          // Add trailing context
-          addContextToChunk();
-          
-          // Finalize the chunk
-          if (currentChunk && currentChunk.lines.length > 0) {
-            chunks.push(currentChunk);
-            currentChunk = null;
-          }
-          
-          // Start buffering for next potential chunk
-          contextBuffer = [];
-        }
-      } else {
-        // Not in a change, buffer context for next potential change
-        contextBuffer.push(line);
-        if (contextBuffer.length > CONTEXT_LINES) {
-          // Keep only the most recent context lines
-          contextBuffer.shift();
-        }
-      }
-    }
-  }
-  
-  // Add any remaining chunk
-  if (currentChunk && currentChunk.lines.length > 0) {
-    chunks.push(currentChunk);
+  // Update stats
+  for (const chunk of chunks) {
+    totalAdditions += chunk.additions;
+    totalDeletions += chunk.deletions;
   }
   
   return { 
@@ -291,6 +207,139 @@ function diffAlgorithm(leftText: string, rightText: string): DiffResult {
       totalRight: rightLines.length
     }
   };
+}
+
+/**
+ * Process raw diff results into well-formed chunks
+ * This is a completely rewritten chunk generator that properly handles ABAP statements
+ */
+function processRawDiffIntoChunks(rawDiff: LineComparison[], chunks: DiffChunk[]): void {
+  if (rawDiff.length === 0) return;
+  
+  // Map to track which lines have been processed into chunks
+  const processedLines = new Set<number>();
+  
+  // Process each line in the raw diff
+  for (let i = 0; i < rawDiff.length; i++) {
+    // Skip already processed lines
+    if (processedLines.has(i)) continue;
+    
+    const line = rawDiff[i];
+    
+    // Check if this is a significant line that should start a new chunk
+    if (line.type === 'added' || line.type === 'removed' || line.type === 'modified') {
+      // Mark this line as processed
+      processedLines.add(i);
+      
+      // Start a new chunk with this line
+      const chunk: DiffChunk = { 
+        lines: [line], 
+        additions: line.type === 'added' || line.type === 'modified' ? 1 : 0,
+        deletions: line.type === 'removed' || line.type === 'modified' ? 1 : 0
+      };
+      
+      // Find all consecutive changed lines of the same type
+      let currentIndex = i + 1;
+      while (
+        currentIndex < rawDiff.length && 
+        (rawDiff[currentIndex].type === line.type ||
+         // Add modified lines following the same addtions/removals
+         (line.type === 'added' && rawDiff[currentIndex].type === 'modified') ||
+         (line.type === 'removed' && rawDiff[currentIndex].type === 'modified') ||
+         // Continue current chunk for mixed add/remove/modify
+         (line.type === 'modified' && 
+          (rawDiff[currentIndex].type === 'added' || rawDiff[currentIndex].type === 'removed'))
+        )
+      ) {
+        // Add this line to the current chunk
+        const currentLine = rawDiff[currentIndex];
+        chunk.lines.push(currentLine);
+        
+        // Update the chunk's stats
+        if (currentLine.type === 'added' || currentLine.type === 'modified') chunk.additions++;
+        if (currentLine.type === 'removed' || currentLine.type === 'modified') chunk.deletions++;
+        
+        // Mark this line as processed
+        processedLines.add(currentIndex);
+        currentIndex++;
+      }
+      
+      // Add the chunk to our result
+      chunks.push(chunk);
+    } else if (line.type === 'unchanged') {
+      // For unchanged lines, check if it's an ABAP statement that should be its own chunk
+      const content = line.content.left || '';
+      const isAbapStatement = content.trim().length > 0;
+      
+      if (isAbapStatement) {
+        const isKeywordLine = /^\s*(REPORT|DATA|CONSTANTS|TYPES|FORM|ENDFORM|METHOD|ENDMETHOD|CLASS|ENDCLASS|INTERFACE|ENDINTERFACE|FUNCTION|ENDFUNCTION|MODULE|ENDMODULE)\b/i.test(content);
+        
+        if (isKeywordLine) {
+          // Create a chunk for this unchanged ABAP statement
+          const chunk: DiffChunk = { 
+            lines: [{ ...line, type: 'context' }], 
+            additions: 0,
+            deletions: 0
+          };
+          
+          // Add all related lines that belong to this statement
+          let currentIndex = i + 1;
+          while (
+            currentIndex < rawDiff.length && 
+            rawDiff[currentIndex].type === 'unchanged' &&
+            // Continue until we find another keyword or a period at the end of a line
+            !(/^\s*(REPORT|DATA|CONSTANTS|TYPES|FORM|ENDFORM|METHOD|ENDMETHOD|CLASS|ENDCLASS|INTERFACE|ENDINTERFACE|FUNCTION|ENDFUNCTION|MODULE|ENDMODULE)\b/i.test(rawDiff[currentIndex].content.left || '')) &&
+            !(/\.\s*$/.test(line.content.left || ''))
+          ) {
+            // Add this line to the current chunk
+            const currentLine = rawDiff[currentIndex];
+            chunk.lines.push({ ...currentLine, type: 'context' });
+            
+            // Mark this line as processed
+            processedLines.add(currentIndex);
+            currentIndex++;
+          }
+          
+          // Mark the starting line as processed
+          processedLines.add(i);
+          
+          // Add the chunk to our result if it has lines
+          if (chunk.lines.length > 0) {
+            chunks.push(chunk);
+          }
+        }
+      }
+    }
+  }
+  
+  // Final pass: handle any unchanged lines that haven't been processed yet
+  for (let i = 0; i < rawDiff.length; i++) {
+    if (!processedLines.has(i) && rawDiff[i].type === 'unchanged') {
+      // Create a chunk for these remaining unchanged lines
+      const line = rawDiff[i];
+      const chunk: DiffChunk = { 
+        lines: [{ ...line, type: 'context' }], 
+        additions: 0,
+        deletions: 0
+      };
+      
+      // Mark this line as processed
+      processedLines.add(i);
+      
+      // Find consecutive unchanged lines
+      let j = i + 1;
+      while (j < rawDiff.length && !processedLines.has(j) && rawDiff[j].type === 'unchanged') {
+        chunk.lines.push({ ...rawDiff[j], type: 'context' });
+        processedLines.add(j);
+        j++;
+      }
+      
+      // Add the chunk to our result if it has lines
+      if (chunk.lines.length > 0) {
+        chunks.push(chunk);
+      }
+    }
+  }
 }
 
 export default diffAlgorithm; 

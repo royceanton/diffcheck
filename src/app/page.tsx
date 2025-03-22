@@ -1,8 +1,10 @@
+//code: src/app/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import FileInput from '@/components/file-input/FileInput';
 import DiffViewer from '@/components/diff-viewer/DiffViewer';
+import { splitAbapStatements, normalizeLineEndings } from '@/lib/diff/abapParser';
 
 export default function Home() {
   const [leftContent, setLeftContent] = useState<string>('');
@@ -18,8 +20,12 @@ export default function Home() {
   
   const handleCompare = async () => {
     try {
+      // Preprocess ABAP code - split by statements and normalize line endings
+      const processedLeftContent = splitAbapStatements(normalizeLineEndings(leftContent));
+      const processedRightContent = splitAbapStatements(normalizeLineEndings(rightContent));
+      
       const result = await import('@/lib/diff/diffAlgorithm').then(module => {
-        return module.default(leftContent, rightContent);
+        return module.default(processedLeftContent, processedRightContent);
       });
       
       setDiffResult(result);
@@ -30,6 +36,31 @@ export default function Home() {
   
   const handleResetView = () => {
     setDiffResult(null);
+  };
+  
+  // Handle merging changes
+  const handleMergeChanges = (updatedLeftContent: string, updatedRightContent: string) => {
+    setLeftContent(updatedLeftContent);
+    setRightContent(updatedRightContent);
+    
+    // Toast notification or feedback could be added here
+    showMergeNotification();
+  };
+  
+  // Simple notification to show merge was successful
+  const showMergeNotification = () => {
+    const notification = document.createElement('div');
+    notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
+    notification.textContent = 'Changes merged successfully!';
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      notification.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 500);
+    }, 3000);
   };
   
   return (
@@ -66,6 +97,7 @@ export default function Home() {
               leftContent={leftContent}
               rightContent={rightContent}
               onResetView={handleResetView}
+              onMergeChanges={handleMergeChanges}
             />
           </div>
         )}

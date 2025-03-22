@@ -1,3 +1,4 @@
+//code: src/components/diff-viewer/DiffViewer.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -18,7 +19,11 @@ hljs.registerLanguage('abap', function(hljs) {
       keyword: 'REPORT DATA TYPE TABLE OF SELECT FROM INTO UP TO ROWS ' +
                'LOOP AT ENDLOOP IF ENDIF WRITE ENDMETHOD CALL FUNCTION ' +
                'METHOD IMPORTING EXPORTING CHANGING FORM ENDFORM PERFORM ' +
-               'CLEAR FIELD-SYMBOLS ASSIGN CP EQ NE GT LT GE LE VALUE CONSTANTS',
+               'CLEAR FIELD-SYMBOLS ASSIGN CP EQ NE GT LT GE LE VALUE CONSTANTS ' +
+               'CLASS ENDCLASS TRY ENDTRY FIELD-SYMBOLS DEFINITION RETURNING ' +
+               'METHODS IMPLEMENTATION USING ELSE PUBLIC FINAL CREATE' +
+               'INSERT UPDATE DELETE MODIFY COMMIT ROLLBACK WHERE ORDER BY ' +
+               'GROUP BY HAVING JOIN INNER LEFT OUTER RIGHT FULL ON',
       literal: 'TRUE FALSE NULL',
     },
     contains: [
@@ -53,15 +58,29 @@ interface DiffViewerProps {
   leftContent: string;
   rightContent: string;
   onResetView: () => void;
+  onMergeChanges?: (updatedLeftContent: string, updatedRightContent: string) => void;
+}
+
+// Define a history item type to track changes
+interface HistoryItem {
+  leftContent: string;
+  rightContent: string;
 }
 
 export default function DiffViewer({ 
   diffResult, 
   leftContent, 
   rightContent,
-  onResetView 
+  onResetView,
+  onMergeChanges
 }: DiffViewerProps) {
   const [activeChunk, setActiveChunk] = useState<number | null>(null);
+  const [selectedChunk, setSelectedChunk] = useState<number | null>(null);
+  
+  // Add history state tracking
+  const [history, setHistory] = useState<HistoryItem[]>([{ leftContent, rightContent }]);
+  const [historyIndex, setHistoryIndex] = useState<number>(0);
+  
   const chunkRefs = useRef<(HTMLDivElement | null)[]>([]);
   const leftPaneRef = useRef<HTMLDivElement>(null);
   const rightPaneRef = useRef<HTMLDivElement>(null);
@@ -70,6 +89,8 @@ export default function DiffViewer({
   // Set up chunk refs
   useEffect(() => {
     chunkRefs.current = chunkRefs.current.slice(0, diffResult.chunks.length);
+    // Reset selection when diff result changes
+    setSelectedChunk(null);
   }, [diffResult.chunks.length]);
   
   // Synchronize scroll between panes
@@ -97,31 +118,359 @@ export default function DiffViewer({
     };
   }, []);
   
+  // Function to add a new history state when changes are made
+  const addToHistory = (newLeftContent: string, newRightContent: string) => {
+    // Remove any future history if we're not at the end
+    const newHistory = history.slice(0, historyIndex + 1);
+    
+    // Add the new state
+    newHistory.push({ leftContent: newLeftContent, rightContent: newRightContent });
+    
+    // Update history and index
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+  
+  // Undo function
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      const previousState = history[newIndex];
+      
+      // Apply the previous state
+      if (onMergeChanges) {
+        onMergeChanges(previousState.leftContent, previousState.rightContent);
+      }
+      
+      // Update the history index
+      setHistoryIndex(newIndex);
+    }
+  };
+  
+  // Redo function
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      const nextState = history[newIndex];
+      
+      // Apply the next state
+      if (onMergeChanges) {
+        onMergeChanges(nextState.leftContent, nextState.rightContent);
+      }
+      
+      // Update the history index
+      setHistoryIndex(newIndex);
+    }
+  };
+  
+  // Function to determine if a chunk has actual differences
+  const chunkHasDifferences = (chunk: DiffChunk): boolean => {
+    return chunk.additions > 0 || chunk.deletions > 0;
+  };
+  
+  // Sort chunks by their line numbers to maintain correct order
+  const sortedChunks = [...diffResult.chunks].sort((a, b) => {
+    // Get the first valid line number from each chunk
+    const aLine = a.lines[0]?.lineNumber.left || a.lines[0]?.lineNumber.right || 0;
+    const bLine = b.lines[0]?.lineNumber.left || b.lines[0]?.lineNumber.right || 0;
+    return aLine - bLine;
+  });
+  
   // Navigate to chunks
   const navigateToChunk = (index: number) => {
-    if (index >= 0 && index < chunkRefs.current.length) {
-      const chunk = chunkRefs.current[index];
+    // Get only chunks that have differences
+    const diffChunks = sortedChunks
+      .map((chunk, idx) => ({ chunk, idx }))
+      .filter(({ chunk }) => chunkHasDifferences(chunk));
+    
+    if (diffChunks.length === 0) return;
+    
+    // If index is provided and valid, use it
+    if (index >= 0 && index < diffChunks.length) {
+      const { idx } = diffChunks[index];
+      const chunk = chunkRefs.current[idx];
       if (chunk) {
         chunk.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        setActiveChunk(index);
+        setActiveChunk(idx);
+        setSelectedChunk(idx);
       }
     }
   };
   
   const navigatePrevChunk = () => {
-    if (activeChunk !== null && activeChunk > 0) {
-      navigateToChunk(activeChunk - 1);
-    } else if (diffResult.chunks.length > 0) {
-      navigateToChunk(0);
+    // Get only chunks that have differences
+    const diffChunks = sortedChunks
+      .map((chunk, idx) => ({ chunk, idx }))
+      .filter(({ chunk }) => chunkHasDifferences(chunk));
+    
+    if (diffChunks.length === 0) return;
+    
+    // Find the current selected chunk in the diffChunks array
+    const currentIndex = diffChunks.findIndex(({ idx }) => idx === selectedChunk);
+    
+    // If there's a selected chunk and it's not the first one
+    if (currentIndex > 0) {
+      // Go to previous diff chunk
+      const { idx } = diffChunks[currentIndex - 1];
+      navigateToChunk(currentIndex - 1);
+    } else {
+      // Wrap around to the last chunk if at the beginning
+      const { idx } = diffChunks[diffChunks.length - 1];
+      navigateToChunk(diffChunks.length - 1);
     }
   };
   
   const navigateNextChunk = () => {
-    if (activeChunk !== null && activeChunk < diffResult.chunks.length - 1) {
-      navigateToChunk(activeChunk + 1);
-    } else if (diffResult.chunks.length > 0) {
+    // Get only chunks that have differences
+    const diffChunks = sortedChunks
+      .map((chunk, idx) => ({ chunk, idx }))
+      .filter(({ chunk }) => chunkHasDifferences(chunk));
+    
+    if (diffChunks.length === 0) return;
+    
+    // Find the current selected chunk in the diffChunks array
+    const currentIndex = diffChunks.findIndex(({ idx }) => idx === selectedChunk);
+    
+    // If there's a selected chunk and it's not the last one
+    if (currentIndex >= 0 && currentIndex < diffChunks.length - 1) {
+      // Go to next diff chunk
+      navigateToChunk(currentIndex + 1);
+    } else {
+      // Wrap around to the first chunk if at the end or no selection
       navigateToChunk(0);
     }
+  };
+  
+  // Handle chunk selection
+  const handleChunkClick = (chunkIndex: number) => {
+    setSelectedChunk(chunkIndex === selectedChunk ? null : chunkIndex);
+    setActiveChunk(chunkIndex);
+  };
+
+  // Merge selected chunk from left to right (overwrite right with left)
+  const mergeLeftToRight = (chunkIndex: number) => {
+    if (!sortedChunks) return;
+    
+    const chunk = sortedChunks[chunkIndex];
+    if (!chunk) return;
+    
+    // Get all the lines from this chunk that exist in the left side
+    // Include empty lines by checking for null specifically, not empty strings
+    const leftLines = chunk.lines
+      .filter(line => line.content.left !== null) // Keep empty strings, only filter out null
+      .map(line => line.content.left as string);
+    
+    // If there are no lines to merge (all null), return early
+    if (leftLines.length === 0) return;
+    
+    // Get line numbers to determine where to insert in the right content
+    const lineNumbers = chunk.lines
+      .filter(line => line.lineNumber.right !== null)
+      .map(line => line.lineNumber.right as number);
+    
+    // Determine the insertion point in the right content
+    let rightLines = rightContent.split('\n');
+    
+    // If we have line numbers on the right side, use them for positioning
+    if (lineNumbers.length > 0) {
+      // Sort and get the first and last line numbers
+      const sortedLineNumbers = [...lineNumbers];
+      sortedLineNumbers.sort((a, b) => a - b);
+      
+      const firstLine = sortedLineNumbers[0];
+      const lastLine = sortedLineNumbers[sortedLineNumbers.length - 1];
+      
+      // Replace the lines in the right content
+      if (firstLine !== undefined && lastLine !== undefined) {
+        // Make sure we've captured all lines intended to be replaced on the right side
+        const actualLastLine = chunk.lines.reduce((maxLine, line) => {
+          if (line.lineNumber.right !== null && line.lineNumber.right > maxLine) {
+            return line.lineNumber.right;
+          }
+          return maxLine;
+        }, lastLine);
+        
+        // Remove the lines that will be replaced (convert from 1-indexed to 0-indexed)
+        rightLines.splice(firstLine - 1, actualLastLine - firstLine + 1);
+        
+        // Insert the left lines at the position of the first line
+        rightLines.splice(firstLine - 1, 0, ...leftLines);
+      } else {
+        // If there's no clear position, append to the end
+        rightLines.push(...leftLines);
+      }
+    } else {
+      // SPECIAL CASE: Handle lines that only exist on the left side (no right line numbers)
+      // Find adjacent line numbers to determine insertion point
+      
+      // First try to find the previous chunk with line numbers on the right 
+      let insertPosition = rightLines.length; // Default to end of file
+      
+      // Look at the chunk index to determine where this chunk should go relative to others
+      const currentChunkIndex = sortedChunks.indexOf(chunk);
+      
+      if (currentChunkIndex > 0) {
+        // Look at previous chunks to find a reference point
+        for (let i = currentChunkIndex - 1; i >= 0; i--) {
+          const prevChunk = sortedChunks[i];
+          const lastLineOfPrevChunk = prevChunk.lines[prevChunk.lines.length - 1];
+          
+          if (lastLineOfPrevChunk.lineNumber.right !== null) {
+            // Found a previous chunk with line numbers, insert after its last line
+            insertPosition = lastLineOfPrevChunk.lineNumber.right;
+            break;
+          }
+        }
+      }
+      
+      // If we found a reference point, use it for insertion
+      if (insertPosition > 0 && insertPosition <= rightLines.length) {
+        rightLines.splice(insertPosition, 0, ...leftLines);
+      } else {
+        // Look for the next chunk to determine position
+        for (let i = currentChunkIndex + 1; i < sortedChunks.length; i++) {
+          const nextChunk = sortedChunks[i];
+          const firstLineOfNextChunk = nextChunk.lines[0];
+          
+          if (firstLineOfNextChunk.lineNumber.right !== null) {
+            // Found a following chunk with line numbers, insert before its first line
+            insertPosition = firstLineOfNextChunk.lineNumber.right - 1;
+            if (insertPosition <= 0) insertPosition = 0;
+            break;
+          }
+        }
+        
+        // Insert at the determined position
+        rightLines.splice(insertPosition, 0, ...leftLines);
+      }
+    }
+    
+    // Update right content
+    const newRightContent = rightLines.join('\n');
+    
+    // Add the change to history before updating
+    addToHistory(leftContent, newRightContent);
+    
+    // Call the callback with updated content
+    if (onMergeChanges) {
+      onMergeChanges(leftContent, newRightContent);
+    }
+    
+    // Force re-render to show the updated diff
+    setSelectedChunk(null);
+  };
+  
+  // Merge selected chunk from right to left (overwrite left with right)
+  const mergeRightToLeft = (chunkIndex: number) => {
+    if (!sortedChunks) return;
+    
+    const chunk = sortedChunks[chunkIndex];
+    if (!chunk) return;
+    
+    // Get all the lines from this chunk that exist in the right side
+    // Include empty lines by checking for null specifically, not empty strings
+    const rightLines = chunk.lines
+      .filter(line => line.content.right !== null) // Keep empty strings, only filter out null
+      .map(line => line.content.right as string);
+    
+    // If there are no lines to merge (all null), return early
+    if (rightLines.length === 0) return;
+    
+    // Get line numbers to determine where to insert in the left content
+    const lineNumbers = chunk.lines
+      .filter(line => line.lineNumber.left !== null)
+      .map(line => line.lineNumber.left as number);
+    
+    // Determine the insertion point in the left content
+    let leftLines = leftContent.split('\n');
+    
+    // If we have line numbers on the left side, use them for positioning
+    if (lineNumbers.length > 0) {
+      // Sort and get the first and last line numbers
+      const sortedLineNumbers = [...lineNumbers];
+      sortedLineNumbers.sort((a, b) => a - b);
+      
+      const firstLine = sortedLineNumbers[0];
+      const lastLine = sortedLineNumbers[sortedLineNumbers.length - 1];
+      
+      // Replace the lines in the left content
+      if (firstLine !== undefined && lastLine !== undefined) {
+        // Make sure we've captured all lines intended to be replaced on the left side
+        const actualLastLine = chunk.lines.reduce((maxLine, line) => {
+          if (line.lineNumber.left !== null && line.lineNumber.left > maxLine) {
+            return line.lineNumber.left;
+          }
+          return maxLine;
+        }, lastLine);
+        
+        // Remove the lines that will be replaced (convert from 1-indexed to 0-indexed)
+        leftLines.splice(firstLine - 1, actualLastLine - firstLine + 1);
+        
+        // Insert the right lines at the position of the first line
+        leftLines.splice(firstLine - 1, 0, ...rightLines);
+      } else {
+        // If there's no clear position, append to the end
+        leftLines.push(...rightLines);
+      }
+    } else {
+      // SPECIAL CASE: Handle lines that only exist on the right side (no left line numbers)
+      // Find adjacent line numbers to determine insertion point
+      
+      // First try to find the previous chunk with line numbers on the left 
+      let insertPosition = leftLines.length; // Default to end of file
+      
+      // Look at the chunk index to determine where this chunk should go relative to others
+      const currentChunkIndex = sortedChunks.indexOf(chunk);
+      
+      if (currentChunkIndex > 0) {
+        // Look at previous chunks to find a reference point
+        for (let i = currentChunkIndex - 1; i >= 0; i--) {
+          const prevChunk = sortedChunks[i];
+          const lastLineOfPrevChunk = prevChunk.lines[prevChunk.lines.length - 1];
+          
+          if (lastLineOfPrevChunk.lineNumber.left !== null) {
+            // Found a previous chunk with line numbers, insert after its last line
+            insertPosition = lastLineOfPrevChunk.lineNumber.left;
+            break;
+          }
+        }
+      }
+      
+      // If we found a reference point, use it for insertion
+      if (insertPosition > 0 && insertPosition <= leftLines.length) {
+        leftLines.splice(insertPosition, 0, ...rightLines);
+      } else {
+        // Look for the next chunk to determine position
+        for (let i = currentChunkIndex + 1; i < sortedChunks.length; i++) {
+          const nextChunk = sortedChunks[i];
+          const firstLineOfNextChunk = nextChunk.lines[0];
+          
+          if (firstLineOfNextChunk.lineNumber.left !== null) {
+            // Found a following chunk with line numbers, insert before its first line
+            insertPosition = firstLineOfNextChunk.lineNumber.left - 1;
+            if (insertPosition <= 0) insertPosition = 0;
+            break;
+          }
+        }
+        
+        // Insert at the determined position
+        leftLines.splice(insertPosition, 0, ...rightLines);
+      }
+    }
+    
+    // Update left content
+    const newLeftContent = leftLines.join('\n');
+    
+    // Add the change to history before updating
+    addToHistory(newLeftContent, rightContent);
+    
+    // Call the callback with updated content
+    if (onMergeChanges) {
+      onMergeChanges(newLeftContent, rightContent);
+    }
+    
+    // Force re-render to show the updated diff
+    setSelectedChunk(null);
   };
   
   // Copy to clipboard
@@ -144,9 +493,23 @@ export default function DiffViewer({
     copyToClipboard(rightContent);
   };
   
+  // Update the reset functionality to clear history as well
+  const handleReset = () => {
+    // Clear history when resetting
+    setHistory([{ leftContent, rightContent }]);
+    setHistoryIndex(0);
+    
+    // Call the original reset function
+    onResetView();
+  };
+
   // Check if any diffs exist
   const hasChanges = diffResult.stats.additions > 0 || diffResult.stats.deletions > 0;
   
+  // Determine if undo/redo are available
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
   return (
     <div className="bg-white border rounded-lg overflow-hidden h-full flex flex-col">
       {/* Header with summary and controls */}
@@ -170,38 +533,79 @@ export default function DiffViewer({
           )}
         </div>
         
-        {/* Navigation controls */}
-        {hasChanges && (
-          <div className="flex items-center space-x-2 mr-4">
-            <button 
-              onClick={navigatePrevChunk}
-              className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded flex items-center"
-              aria-label="Previous change"
+        <div className="flex items-center space-x-4">
+          {/* Navigation controls - always visible when there are changes */}
+          {hasChanges && (
+            <div className="flex items-center space-x-2">
+              <div className="text-sm text-gray-700">
+                {selectedChunk !== null ? `Change ${selectedChunk + 1} of ${diffResult.chunks.filter(chunk => chunkHasDifferences(chunk)).length}` : ''}
+              </div>
+              <button 
+                onClick={navigatePrevChunk}
+                className="px-2 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded flex items-center"
+                aria-label="Previous change"
+                disabled={!hasChanges}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1">
+                  <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                </svg>
+                Prev
+              </button>
+              <button 
+                onClick={navigateNextChunk}
+                className="px-2 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded flex items-center"
+                aria-label="Next change"
+                disabled={!hasChanges}
+              >
+                Next
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1">
+                  <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          )}
+          
+          {/* History and reset controls */}
+          <div className="flex items-center space-x-2">
+            {/* Undo button */}
+            <button
+              className={`px-3 py-1 text-sm rounded flex items-center ${
+                canUndo ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
+              onClick={handleUndo}
+              disabled={!canUndo}
+              title="Undo last change"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1">
-                <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M7.793 2.232a.75.75 0 01-.025 1.06L3.622 7.25h10.003a5.375 5.375 0 010 10.75H10.75a.75.75 0 010-1.5h2.875a3.875 3.875 0 000-7.75H3.622l4.146 3.957a.75.75 0 01-1.036 1.085l-5.5-5.25a.75.75 0 010-1.085l5.5-5.25a.75.75 0 011.06.025z" clipRule="evenodd" />
               </svg>
-              Prev
+              Undo
             </button>
-            <button 
-              onClick={navigateNextChunk}
-              className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded flex items-center"
-              aria-label="Next change"
+            
+            {/* Redo button */}
+            <button
+              className={`px-3 py-1 text-sm rounded flex items-center ${
+                canRedo ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
+              onClick={handleRedo}
+              disabled={!canRedo}
+              title="Redo last undone change"
             >
-              Next
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1">
-                <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M12.207 2.232a.75.75 0 00.025 1.06L16.378 7.25H6.375a5.375 5.375 0 000 10.75h2.875a.75.75 0 000-1.5H6.375a3.875 3.875 0 010-7.75h10.003l-4.146 3.957a.75.75 0 001.036 1.085l5.5-5.25a.75.75 0 000-1.085l-5.5-5.25a.75.75 0 00-1.06.025z" clipRule="evenodd" />
               </svg>
+              Redo
+            </button>
+            
+            {/* Reset button */}
+            <button
+              className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded"
+              onClick={handleReset}
+            >
+              Reset Comparison
             </button>
           </div>
-        )}
-        
-        <button
-          className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded"
-          onClick={onResetView}
-        >
-          Reset Comparison
-        </button>
+        </div>
       </div>
       
       {/* File headers with copy buttons */}
@@ -240,47 +644,98 @@ export default function DiffViewer({
           className="w-1/2 overflow-auto border-r"
           style={{ height: '100%' }}
         >
-          {diffResult.chunks.map((chunk, chunkIndex) => (
-            <div 
-              key={`chunk-left-${chunkIndex}`}
-              ref={(el) => { chunkRefs.current[chunkIndex] = el; }}
-              className="border border-gray-200 rounded-l my-4 overflow-hidden"
-            >
-              {/* Chunk header */}
-              {chunk.deletions > 0 && (
-                <div className="bg-gray-100 px-3 py-1 text-xs border-b text-gray-700">
-                  <span className="text-red-600 font-medium">−{chunk.deletions} {chunk.deletions === 1 ? 'removal' : 'removals'}</span>
+          {sortedChunks.map((chunk, chunkIndex) => {
+            const hasDifferences = chunkHasDifferences(chunk);
+            
+            return hasDifferences ? (
+              <div 
+                key={`chunk-left-${chunkIndex}`}
+                ref={(el) => { chunkRefs.current[chunkIndex] = el; }}
+                className={`${
+                  selectedChunk === chunkIndex ? 'ring-2 ring-blue-500' : ''
+                } ${chunkIndex > 0 ? 'border-t border-gray-200' : ''}`}
+                onClick={hasDifferences ? () => handleChunkClick(chunkIndex) : undefined}
+              >
+                {/* Chunk header - only show for chunks with differences */}
+                <div className="bg-gray-100 px-3 py-1 text-xs text-gray-700 flex justify-between items-center">
+                  <span className="text-red-600 font-medium">
+                    {chunk.deletions > 0 ? `−${chunk.deletions} ${chunk.deletions === 1 ? 'removal' : 'removals'}` : ''}
+                  </span>
+                  
+                  {/* Merge controls - visible only when chunk is selected */}
+                  {selectedChunk === chunkIndex && (
+                    <div className="flex items-center space-x-1">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          mergeLeftToRight(chunkIndex);
+                        }}
+                        className="px-2 py-0.5 text-xs bg-red-500 text-white hover:bg-red-600 rounded"
+                      >
+                        Merge to right
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-              
-              {/* Chunk content */}
-              <div>
-                {chunk.lines.map((line, lineIndex) => (
-                  <div 
-                    key={`line-left-${chunkIndex}-${lineIndex}`}
-                    className={`flex ${getLineClass(line.type, 'left')}`}
-                  >
-                    <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
-                      {line.lineNumber.left || ' '}
+                
+                {/* Chunk content */}
+                <div>
+                  {chunk.lines.map((line, lineIndex) => (
+                    <div 
+                      key={`line-left-${chunkIndex}-${lineIndex}`}
+                      className={`flex ${getLineClass(line.type, 'left')} cursor-pointer`}
+                    >
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                        {line.lineNumber.left || ' '}
+                      </div>
+                      <div className="w-full overflow-x-auto">
+                        {line.content.left ? (
+                          <CodeLine 
+                            content={line.content.left} 
+                            language="abap"
+                            isModified={line.type === 'modified'}
+                            otherContent={line.content.right || ''}
+                            side="left"
+                          />
+                        ) : (
+                          <div className="px-2 py-0 h-5"></div>
+                        )}
+                      </div>
                     </div>
-                    <div className="w-full overflow-x-auto">
-                      {line.content.left ? (
-                        <CodeLine 
-                          content={line.content.left} 
-                          language="abap"
-                          isModified={line.type === 'modified'}
-                          otherContent={line.content.right || ''}
-                          side="left"
-                        />
-                      ) : (
-                        <div className="px-2 py-0 h-5"></div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ) : (
+              // For identical chunks, render without borders and extra styling
+              <div 
+                key={`chunk-left-${chunkIndex}`}
+              >
+                <div>
+                  {chunk.lines.map((line, lineIndex) => (
+                    <div 
+                      key={`line-left-${chunkIndex}-${lineIndex}`}
+                      className="flex"
+                    >
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                        {line.lineNumber.left || ' '}
+                      </div>
+                      <div className="w-full overflow-x-auto">
+                        {line.content.left ? (
+                          <CodeLine 
+                            content={line.content.left} 
+                            language="abap"
+                            side="left"
+                          />
+                        ) : (
+                          <div className="px-2 py-0 h-5"></div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
         
         {/* Right pane */}
@@ -289,46 +744,97 @@ export default function DiffViewer({
           className="w-1/2 overflow-auto"
           style={{ height: '100%' }}
         >
-          {diffResult.chunks.map((chunk, chunkIndex) => (
-            <div 
-              key={`chunk-right-${chunkIndex}`}
-              className="border border-gray-200 rounded-r my-4 overflow-hidden"
-            >
-              {/* Chunk header */}
-              {chunk.additions > 0 && (
-                <div className="bg-gray-100 px-3 py-1 text-xs border-b text-gray-700">
-                  <span className="text-green-600 font-medium">+{chunk.additions} {chunk.additions === 1 ? 'addition' : 'additions'}</span>
+          {sortedChunks.map((chunk, chunkIndex) => {
+            const hasDifferences = chunkHasDifferences(chunk);
+            
+            return hasDifferences ? (
+              <div 
+                key={`chunk-right-${chunkIndex}`}
+                className={`${
+                  selectedChunk === chunkIndex ? 'ring-2 ring-blue-500' : ''
+                } ${chunkIndex > 0 ? 'border-t border-gray-200' : ''}`}
+                onClick={hasDifferences ? () => handleChunkClick(chunkIndex) : undefined}
+              >
+                {/* Chunk header - only show for chunks with differences */}
+                <div className="bg-gray-100 px-3 py-1 text-xs text-gray-700 flex justify-between items-center">
+                  <span className="text-green-600 font-medium">
+                    {chunk.additions > 0 ? `+${chunk.additions} ${chunk.additions === 1 ? 'addition' : 'additions'}` : ''}
+                  </span>
+                  
+                  {/* Merge controls - visible only when chunk is selected */}
+                  {selectedChunk === chunkIndex && (
+                    <div className="flex items-center space-x-1">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          mergeRightToLeft(chunkIndex);
+                        }}
+                        className="px-2 py-0.5 text-xs bg-green-500 text-white hover:bg-green-600 rounded"
+                      >
+                        Merge to left
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-              
-              {/* Chunk content */}
-              <div>
-                {chunk.lines.map((line, lineIndex) => (
-                  <div 
-                    key={`line-right-${chunkIndex}-${lineIndex}`}
-                    className={`flex ${getLineClass(line.type, 'right')}`}
-                  >
-                    <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
-                      {line.lineNumber.right || ' '}
+                
+                {/* Chunk content */}
+                <div>
+                  {chunk.lines.map((line, lineIndex) => (
+                    <div 
+                      key={`line-right-${chunkIndex}-${lineIndex}`}
+                      className={`flex ${getLineClass(line.type, 'right')} cursor-pointer`}
+                    >
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                        {line.lineNumber.right || ' '}
+                      </div>
+                      <div className="w-full overflow-x-auto">
+                        {line.content.right ? (
+                          <CodeLine 
+                            content={line.content.right} 
+                            language="abap"
+                            isModified={line.type === 'modified'}
+                            otherContent={line.content.left || ''}
+                            side="right"
+                          />
+                        ) : (
+                          <div className="px-2 py-0 h-5"></div>
+                        )}
+                      </div>
                     </div>
-                    <div className="w-full overflow-x-auto">
-                      {line.content.right ? (
-                        <CodeLine 
-                          content={line.content.right} 
-                          language="abap"
-                          isModified={line.type === 'modified'}
-                          otherContent={line.content.left || ''}
-                          side="right"
-                        />
-                      ) : (
-                        <div className="px-2 py-0 h-5"></div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ) : (
+              // For identical chunks, render without borders and extra styling
+              <div 
+                key={`chunk-right-${chunkIndex}`}
+              >
+                <div>
+                  {chunk.lines.map((line, lineIndex) => (
+                    <div 
+                      key={`line-right-${chunkIndex}-${lineIndex}`}
+                      className="flex"
+                    >
+                      <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-gray-500 select-none border-r bg-gray-50 text-xs">
+                        {line.lineNumber.right || ' '}
+                      </div>
+                      <div className="w-full overflow-x-auto">
+                        {line.content.right ? (
+                          <CodeLine 
+                            content={line.content.right} 
+                            language="abap"
+                            side="right"
+                          />
+                        ) : (
+                          <div className="px-2 py-0 h-5"></div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
         
         {/* Minimap indicator (right side) */}
@@ -337,7 +843,7 @@ export default function DiffViewer({
           className="absolute right-0 top-0 w-1.5 h-full"
           style={{ background: '#f5f5f5' }}
         >
-          {diffResult.chunks.map((chunk, index) => {
+          {sortedChunks.map((chunk, index) => {
             // Calculate position relative to file size
             const totalLines = Math.max(diffResult.stats.totalLeft, diffResult.stats.totalRight);
             const chunkLines = chunk.lines.length;
@@ -345,6 +851,10 @@ export default function DiffViewer({
             
             const topPercent = (chunkStartLine / totalLines) * 100;
             const heightPercent = (chunkLines / totalLines) * 100;
+            
+            // Only show in minimap if chunk has differences
+            const hasDifferences = chunkHasDifferences(chunk);
+            if (!hasDifferences) return null;
             
             // Determine color based on chunk content
             let color = '#ccc'; // Default gray
@@ -356,14 +866,17 @@ export default function DiffViewer({
               color = '#f85149'; // Red for deletions
             }
             
+            // Highlight selected chunk
+            const isSelected = selectedChunk === index;
+            
             return (
               <div
                 key={`minimap-${index}`}
-                className="absolute w-full"
+                className={`absolute w-full transition-all ${isSelected ? 'w-2 -right-0.5' : ''}`}
                 style={{
                   top: `${topPercent}%`,
                   height: `${Math.max(heightPercent, 1)}%`, // At least 1% height for visibility
-                  backgroundColor: color,
+                  backgroundColor: isSelected ? '#2196f3' : color,
                 }}
                 onClick={() => navigateToChunk(index)}
               />
