@@ -1,3 +1,4 @@
+//code: src/components/diff-viewer/DiffViewer.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -53,15 +54,18 @@ interface DiffViewerProps {
   leftContent: string;
   rightContent: string;
   onResetView: () => void;
+  onMergeChanges?: (updatedLeftContent: string, updatedRightContent: string) => void;
 }
 
 export default function DiffViewer({ 
   diffResult, 
   leftContent, 
   rightContent,
-  onResetView 
+  onResetView,
+  onMergeChanges
 }: DiffViewerProps) {
   const [activeChunk, setActiveChunk] = useState<number | null>(null);
+  const [selectedChunk, setSelectedChunk] = useState<number | null>(null);
   const chunkRefs = useRef<(HTMLDivElement | null)[]>([]);
   const leftPaneRef = useRef<HTMLDivElement>(null);
   const rightPaneRef = useRef<HTMLDivElement>(null);
@@ -70,6 +74,8 @@ export default function DiffViewer({
   // Set up chunk refs
   useEffect(() => {
     chunkRefs.current = chunkRefs.current.slice(0, diffResult.chunks.length);
+    // Reset selection when diff result changes
+    setSelectedChunk(null);
   }, [diffResult.chunks.length]);
   
   // Synchronize scroll between panes
@@ -104,24 +110,185 @@ export default function DiffViewer({
       if (chunk) {
         chunk.scrollIntoView({ behavior: 'smooth', block: 'center' });
         setActiveChunk(index);
+        setSelectedChunk(index);
       }
     }
   };
   
   const navigatePrevChunk = () => {
-    if (activeChunk !== null && activeChunk > 0) {
-      navigateToChunk(activeChunk - 1);
+    if (selectedChunk !== null && selectedChunk > 0) {
+      navigateToChunk(selectedChunk - 1);
     } else if (diffResult.chunks.length > 0) {
       navigateToChunk(0);
     }
   };
   
   const navigateNextChunk = () => {
-    if (activeChunk !== null && activeChunk < diffResult.chunks.length - 1) {
-      navigateToChunk(activeChunk + 1);
+    if (selectedChunk !== null && selectedChunk < diffResult.chunks.length - 1) {
+      navigateToChunk(selectedChunk + 1);
     } else if (diffResult.chunks.length > 0) {
       navigateToChunk(0);
     }
+  };
+  
+  // Handle chunk selection
+  const handleChunkClick = (chunkIndex: number) => {
+    setSelectedChunk(chunkIndex === selectedChunk ? null : chunkIndex);
+    setActiveChunk(chunkIndex);
+  };
+
+  // Merge selected chunk from left to right (overwrite right with left)
+  const mergeLeftToRight = (chunkIndex: number) => {
+    if (!diffResult || !diffResult.chunks) return;
+    
+    const chunk = diffResult.chunks[chunkIndex];
+    if (!chunk) return;
+    
+    // Get all the lines from this chunk that exist in the left side
+    const leftLines = chunk.lines
+      .filter(line => line.content.left !== null)
+      .map(line => line.content.left as string); // Non-null assertion with type cast
+    
+    // If no left lines, nothing to merge
+    if (leftLines.length === 0) return;
+    
+    // Get line numbers to determine where to insert in the right content
+    const lineNumbers = chunk.lines
+      .filter(line => line.lineNumber.right !== null)
+      .map(line => line.lineNumber.right as number); // Non-null assertion with type cast
+    
+    // Determine the insertion point in the right content
+    let rightLines = rightContent.split('\n');
+    
+    // If we have line numbers on the right side, use them for positioning
+    if (lineNumbers.length > 0) {
+      // Sort and get the first and last line numbers
+      const sortedLineNumbers = [...lineNumbers];
+      sortedLineNumbers.sort((a, b) => a - b);
+      
+      const firstLine = sortedLineNumbers[0];
+      const lastLine = sortedLineNumbers[sortedLineNumbers.length - 1];
+      
+      // Replace the lines in the right content
+      if (firstLine !== undefined && lastLine !== undefined) {
+        // Remove the lines that will be replaced (convert from 1-indexed to 0-indexed)
+        rightLines.splice(firstLine - 1, lastLine - firstLine + 1);
+        
+        // Insert the left lines at the position of the first line
+        rightLines.splice(firstLine - 1, 0, ...leftLines);
+      } else {
+        // If there's no clear position, append to the end
+        rightLines.push(...leftLines);
+      }
+    } else {
+      // If there are no line numbers on the right side, find adjacent content
+      
+      // Try to find lines before this chunk
+      const prevRightLineNumber = chunk.lines
+        .findIndex(line => line.lineNumber.right !== null);
+      
+      if (prevRightLineNumber >= 0) {
+        // Insert after the previous line
+        const lineNumber = chunk.lines[prevRightLineNumber].lineNumber.right;
+        if (lineNumber !== null) {
+          rightLines.splice(lineNumber, 0, ...leftLines);
+        } else {
+          // Fallback - append to the end
+          rightLines.push(...leftLines);
+        }
+      } else {
+        // If no clear position, append to the end
+        rightLines.push(...leftLines);
+      }
+    }
+    
+    // Update right content
+    const newRightContent = rightLines.join('\n');
+    
+    // Call the callback with updated content
+    if (onMergeChanges) {
+      onMergeChanges(leftContent, newRightContent);
+    }
+    
+    // Force re-render to show the updated diff
+    setSelectedChunk(null);
+  };
+  
+  // Merge selected chunk from right to left (overwrite left with right)
+  const mergeRightToLeft = (chunkIndex: number) => {
+    if (!diffResult || !diffResult.chunks) return;
+    
+    const chunk = diffResult.chunks[chunkIndex];
+    if (!chunk) return;
+    
+    // Get all the lines from this chunk that exist in the right side
+    const rightLines = chunk.lines
+      .filter(line => line.content.right !== null)
+      .map(line => line.content.right as string); // Non-null assertion with type cast
+    
+    // If no right lines, nothing to merge
+    if (rightLines.length === 0) return;
+    
+    // Get line numbers to determine where to insert in the left content
+    const lineNumbers = chunk.lines
+      .filter(line => line.lineNumber.left !== null)
+      .map(line => line.lineNumber.left as number); // Non-null assertion with type cast
+    
+    // Determine the insertion point in the left content
+    let leftLines = leftContent.split('\n');
+    
+    // If we have line numbers on the left side, use them for positioning
+    if (lineNumbers.length > 0) {
+      // Sort and get the first and last line numbers
+      const sortedLineNumbers = [...lineNumbers];
+      sortedLineNumbers.sort((a, b) => a - b);
+      
+      const firstLine = sortedLineNumbers[0];
+      const lastLine = sortedLineNumbers[sortedLineNumbers.length - 1];
+      
+      // Replace the lines in the left content
+      if (firstLine !== undefined && lastLine !== undefined) {
+        // Remove the lines that will be replaced (convert from 1-indexed to 0-indexed)
+        leftLines.splice(firstLine - 1, lastLine - firstLine + 1);
+        
+        // Insert the right lines at the position of the first line
+        leftLines.splice(firstLine - 1, 0, ...rightLines);
+      } else {
+        // If there's no clear position, append to the end
+        leftLines.push(...rightLines);
+      }
+    } else {
+      // If there are no line numbers on the left side, find adjacent content
+      
+      // Try to find lines before this chunk
+      const prevLeftLineNumber = chunk.lines
+        .findIndex(line => line.lineNumber.left !== null);
+      
+      if (prevLeftLineNumber >= 0) {
+        // Insert after the previous line
+        const lineNumber = chunk.lines[prevLeftLineNumber].lineNumber.left;
+        if (lineNumber !== null) {
+          leftLines.splice(lineNumber, 0, ...rightLines);
+        } else {
+          // Fallback - append to the end
+          leftLines.push(...rightLines);
+        }
+      } else {
+        // If no clear position, append to the end
+        leftLines.push(...rightLines);
+      }
+    }
+    
+    // Update left content
+    const newLeftContent = leftLines.join('\n');
+    
+    // Call the callback with updated content
+    if (onMergeChanges) {
+      onMergeChanges(newLeftContent, rightContent);
+    }
+    
+    // Force re-render to show the updated diff
+    setSelectedChunk(null);
   };
   
   // Copy to clipboard
@@ -171,8 +338,11 @@ export default function DiffViewer({
         </div>
         
         {/* Navigation controls */}
-        {hasChanges && (
+        {hasChanges && selectedChunk !== null && (
           <div className="flex items-center space-x-2 mr-4">
+            <div className="text-sm text-gray-700">
+              Change {selectedChunk + 1} of {diffResult.chunks.length}
+            </div>
             <button 
               onClick={navigatePrevChunk}
               className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded flex items-center"
@@ -244,14 +414,32 @@ export default function DiffViewer({
             <div 
               key={`chunk-left-${chunkIndex}`}
               ref={(el) => { chunkRefs.current[chunkIndex] = el; }}
-              className="border border-gray-200 rounded-l my-4 overflow-hidden"
+              className={`border border-gray-200 rounded-l my-4 overflow-hidden cursor-pointer transition-all ${
+                selectedChunk === chunkIndex ? 'ring-2 ring-blue-500' : ''
+              }`}
+              onClick={() => handleChunkClick(chunkIndex)}
             >
               {/* Chunk header */}
-              {chunk.deletions > 0 && (
-                <div className="bg-gray-100 px-3 py-1 text-xs border-b text-gray-700">
-                  <span className="text-red-600 font-medium">−{chunk.deletions} {chunk.deletions === 1 ? 'removal' : 'removals'}</span>
-                </div>
-              )}
+              <div className="bg-gray-100 px-3 py-1 text-xs border-b text-gray-700 flex justify-between items-center">
+                <span className="text-red-600 font-medium">
+                  {chunk.deletions > 0 ? `−${chunk.deletions} ${chunk.deletions === 1 ? 'removal' : 'removals'}` : ''}
+                </span>
+                
+                {/* Merge controls - visible only when chunk is selected */}
+                {selectedChunk === chunkIndex && (
+                  <div className="flex items-center space-x-1">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        mergeLeftToRight(chunkIndex);
+                      }}
+                      className="px-2 py-0.5 text-xs bg-red-500 text-white hover:bg-red-600 rounded"
+                    >
+                      Merge change ←
+                    </button>
+                  </div>
+                )}
+              </div>
               
               {/* Chunk content */}
               <div>
@@ -292,14 +480,32 @@ export default function DiffViewer({
           {diffResult.chunks.map((chunk, chunkIndex) => (
             <div 
               key={`chunk-right-${chunkIndex}`}
-              className="border border-gray-200 rounded-r my-4 overflow-hidden"
+              className={`border border-gray-200 rounded-r my-4 overflow-hidden cursor-pointer transition-all ${
+                selectedChunk === chunkIndex ? 'ring-2 ring-blue-500' : ''
+              }`}
+              onClick={() => handleChunkClick(chunkIndex)}
             >
               {/* Chunk header */}
-              {chunk.additions > 0 && (
-                <div className="bg-gray-100 px-3 py-1 text-xs border-b text-gray-700">
-                  <span className="text-green-600 font-medium">+{chunk.additions} {chunk.additions === 1 ? 'addition' : 'additions'}</span>
-                </div>
-              )}
+              <div className="bg-gray-100 px-3 py-1 text-xs border-b text-gray-700 flex justify-between items-center">
+                <span className="text-green-600 font-medium">
+                  {chunk.additions > 0 ? `+${chunk.additions} ${chunk.additions === 1 ? 'addition' : 'additions'}` : ''}
+                </span>
+                
+                {/* Merge controls - visible only when chunk is selected */}
+                {selectedChunk === chunkIndex && (
+                  <div className="flex items-center space-x-1">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        mergeRightToLeft(chunkIndex);
+                      }}
+                      className="px-2 py-0.5 text-xs bg-green-500 text-white hover:bg-green-600 rounded"
+                    >
+                      Merge change →
+                    </button>
+                  </div>
+                )}
+              </div>
               
               {/* Chunk content */}
               <div>
@@ -356,14 +562,17 @@ export default function DiffViewer({
               color = '#f85149'; // Red for deletions
             }
             
+            // Highlight selected chunk
+            const isSelected = selectedChunk === index;
+            
             return (
               <div
                 key={`minimap-${index}`}
-                className="absolute w-full"
+                className={`absolute w-full transition-all ${isSelected ? 'w-2 -right-0.5' : ''}`}
                 style={{
                   top: `${topPercent}%`,
                   height: `${Math.max(heightPercent, 1)}%`, // At least 1% height for visibility
-                  backgroundColor: color,
+                  backgroundColor: isSelected ? '#2196f3' : color,
                 }}
                 onClick={() => navigateToChunk(index)}
               />

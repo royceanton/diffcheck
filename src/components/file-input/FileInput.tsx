@@ -1,3 +1,4 @@
+//code: src/components/file-input/FileInput.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
