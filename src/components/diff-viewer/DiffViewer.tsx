@@ -668,7 +668,19 @@ export default function DiffViewer({
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(
       () => {
-        // Success feedback could be added here
+        // Show feedback toast
+        const notification = document.createElement('div');
+        notification.className = 'fixed bottom-4 right-4 bg-indigo-500 text-white px-4 py-2 rounded-md shadow-lg z-50 animate-in fade-in slide-in-from-bottom-5';
+        notification.textContent = 'Copied to clipboard!';
+        document.body.appendChild(notification);
+        
+        // Remove after 2 seconds
+        setTimeout(() => {
+          notification.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 500);
+        }, 2000);
       },
       (err) => {
         console.error('Could not copy text: ', err);
@@ -819,10 +831,14 @@ export default function DiffViewer({
             <span className="text-xs text-zinc-500 mr-2">{diffResult.stats.totalLeft} lines</span>
             <button 
               onClick={copyLeftContent}
-              className="px-2 py-1 text-xs bg-zinc-200 hover:bg-zinc-300 rounded-md transition-colors"
+              className="px-3 py-1.5 text-sm bg-zinc-200 hover:bg-zinc-300 rounded-md transition-colors flex items-center space-x-1 active:scale-95 active:bg-indigo-100 transform duration-75"
               type="button"
             >
-              Copy
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+              </svg>
+              <span>Copy</span>
             </button>
           </div>
         </div>
@@ -832,10 +848,14 @@ export default function DiffViewer({
             <span className="text-xs text-zinc-500 mr-2">{diffResult.stats.totalRight} lines</span>
             <button 
               onClick={copyRightContent}
-              className="px-2 py-1 text-xs bg-zinc-200 hover:bg-zinc-300 rounded-md transition-colors"
+              className="px-3 py-1.5 text-sm bg-zinc-200 hover:bg-zinc-300 rounded-md transition-colors flex items-center space-x-1 active:scale-95 active:bg-indigo-100 transform duration-75"
               type="button"
             >
-              Copy
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+              </svg>
+              <span>Copy</span>
             </button>
           </div>
         </div>
