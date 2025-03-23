@@ -397,6 +397,12 @@ export default function DiffViewer({
     // If there are no lines to merge (all null), return early
     if (leftLines.length === 0) return;
     
+    // Special handling for leading empty lines chunk
+    const isLeadingEmptyLinesChunk = chunk.lines.every(line => 
+      (line.lineNumber.left === 1 || line.lineNumber.right === 1) && 
+      (line.content.left === '' || line.content.right === '')
+    );
+    
     // Get line numbers to determine where to insert in the right content
     const lineNumbers = chunk.lines
       .filter(line => line.lineNumber.right !== null)
@@ -405,8 +411,30 @@ export default function DiffViewer({
     // Determine the insertion point in the right content
     let rightLines = rightContent.split('\n');
     
-    // If we have line numbers on the right side, use them for positioning
-    if (lineNumbers.length > 0) {
+    // Handle leading empty lines specially
+    if (isLeadingEmptyLinesChunk) {
+      // For leading empty lines, we want to either add or remove them
+      // from the beginning of the file
+      const targetEmptyLineCount = leftLines.length;
+      
+      // Count existing empty lines at beginning of right content
+      let existingEmptyLines = 0;
+      while (existingEmptyLines < rightLines.length && rightLines[existingEmptyLines].trim() === '') {
+        existingEmptyLines++;
+      }
+      
+      // Remove existing empty lines
+      if (existingEmptyLines > 0) {
+        rightLines.splice(0, existingEmptyLines);
+      }
+      
+      // Add the correct number of empty lines from left
+      if (targetEmptyLineCount > 0) {
+        rightLines.unshift(...Array(targetEmptyLineCount).fill(''));
+      }
+    }
+    // Regular handling for non-leading empty line chunks
+    else if (lineNumbers.length > 0) {
       // Sort and get the first and last line numbers
       const sortedLineNumbers = [...lineNumbers];
       sortedLineNumbers.sort((a, b) => a - b);
@@ -510,6 +538,12 @@ export default function DiffViewer({
     // If there are no lines to merge (all null), return early
     if (rightLines.length === 0) return;
     
+    // Special handling for leading empty lines chunk
+    const isLeadingEmptyLinesChunk = chunk.lines.every(line => 
+      (line.lineNumber.left === 1 || line.lineNumber.right === 1) && 
+      (line.content.left === '' || line.content.right === '')
+    );
+    
     // Get line numbers to determine where to insert in the left content
     const lineNumbers = chunk.lines
       .filter(line => line.lineNumber.left !== null)
@@ -518,8 +552,30 @@ export default function DiffViewer({
     // Determine the insertion point in the left content
     let leftLines = leftContent.split('\n');
     
-    // If we have line numbers on the left side, use them for positioning
-    if (lineNumbers.length > 0) {
+    // Handle leading empty lines specially
+    if (isLeadingEmptyLinesChunk) {
+      // For leading empty lines, we want to either add or remove them
+      // from the beginning of the file
+      const targetEmptyLineCount = rightLines.length;
+      
+      // Count existing empty lines at beginning of left content
+      let existingEmptyLines = 0;
+      while (existingEmptyLines < leftLines.length && leftLines[existingEmptyLines].trim() === '') {
+        existingEmptyLines++;
+      }
+      
+      // Remove existing empty lines
+      if (existingEmptyLines > 0) {
+        leftLines.splice(0, existingEmptyLines);
+      }
+      
+      // Add the correct number of empty lines from right
+      if (targetEmptyLineCount > 0) {
+        leftLines.unshift(...Array(targetEmptyLineCount).fill(''));
+      }
+    }
+    // Regular handling for non-leading empty line chunks
+    else if (lineNumbers.length > 0) {
       // Sort and get the first and last line numbers
       const sortedLineNumbers = [...lineNumbers];
       sortedLineNumbers.sort((a, b) => a - b);
@@ -550,7 +606,7 @@ export default function DiffViewer({
       // SPECIAL CASE: Handle lines that only exist on the right side (no left line numbers)
       // Find adjacent line numbers to determine insertion point
       
-      // First try to find the previous chunk with line numbers on the left 
+      // First try to find the previous chunk with line numbers on the left
       let insertPosition = leftLines.length; // Default to end of file
       
       // Look at the chunk index to determine where this chunk should go relative to others

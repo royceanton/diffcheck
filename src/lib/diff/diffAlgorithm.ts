@@ -51,19 +51,29 @@ function diffAlgorithm(leftText: string, rightText: string): DiffResult {
     };
   }
   
-  // Split the content into lines
-  const leftLines = leftText.split('\n');
-  const rightLines = rightText.split('\n');
+  // Pre-process the inputs to handle empty lines properly
+  const { 
+    processedLeftText, 
+    processedRightText, 
+    leftLineOffset, 
+    rightLineOffset,
+    originalLeftLines,
+    originalRightLines
+  } = preprocessInputs(leftText, rightText);
   
-  // Track line numbers separately
-  let leftLineNumber = 1;
-  let rightLineNumber = 1;
+  // Split the processed content into lines
+  const leftLines = processedLeftText.split('\n');
+  const rightLines = processedRightText.split('\n');
   
-  // Get the basic diff
-  const lineDiffs = diffLines(leftText, rightText);
+  // Get the basic diff based on preprocessed content
+  const lineDiffs = diffLines(processedLeftText, processedRightText);
   
   // Raw result before chunking
   const rawDiff: LineComparison[] = [];
+  
+  // Track line numbers - account for skipped leading empty lines
+  let leftLineNumber = 1 + leftLineOffset;
+  let rightLineNumber = 1 + rightLineOffset;
   
   // Process each diff segment
   for (let i = 0; i < lineDiffs.length; i++) {
@@ -203,9 +213,45 @@ function diffAlgorithm(leftText: string, rightText: string): DiffResult {
     stats: {
       additions: totalAdditions,
       deletions: totalDeletions,
-      totalLeft: leftLines.length,
-      totalRight: rightLines.length
+      totalLeft: originalLeftLines.length,
+      totalRight: originalRightLines.length
     }
+  };
+}
+
+/**
+ * Preprocesses input texts to handle leading empty lines
+ * This function strips leading empty lines and returns processed texts
+ * along with information about the original line counts.
+ */
+function preprocessInputs(leftText: string, rightText: string) {
+  // Split into lines
+  const originalLeftLines = leftText.split('\n');
+  const originalRightLines = rightText.split('\n');
+  
+  // Find first non-empty line in left text
+  let leftLineOffset = 0;
+  while (leftLineOffset < originalLeftLines.length && originalLeftLines[leftLineOffset].trim() === '') {
+    leftLineOffset++;
+  }
+  
+  // Find first non-empty line in right text
+  let rightLineOffset = 0;
+  while (rightLineOffset < originalRightLines.length && originalRightLines[rightLineOffset].trim() === '') {
+    rightLineOffset++;
+  }
+  
+  // Create processed texts without leading empty lines
+  const processedLeftText = originalLeftLines.slice(leftLineOffset).join('\n');
+  const processedRightText = originalRightLines.slice(rightLineOffset).join('\n');
+  
+  return {
+    processedLeftText,
+    processedRightText,
+    leftLineOffset,
+    rightLineOffset,
+    originalLeftLines,
+    originalRightLines
   };
 }
 
