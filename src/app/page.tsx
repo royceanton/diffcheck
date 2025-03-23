@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import FileInput from '@/components/file-input/FileInput';
 import DiffViewer from '@/components/diff-viewer/DiffViewer';
 import { splitAbapStatements, normalizeLineEndings } from '@/lib/diff/abapParser';
+import Link from 'next/link';
 
 export default function Home() {
   const [leftContent, setLeftContent] = useState<string>('');
@@ -64,26 +65,50 @@ export default function Home() {
   };
   
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-50">
-      <header className="bg-white border-b border-zinc-200 shadow-sm py-4 px-6">
-        <div className="max-w-screen-2xl mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-violet-600">
-            DeltaDiff
-          </h1>
-          <span className="text-sm text-zinc-500">Code Comparison Tool</span>
+    <div className="flex flex-col h-screen bg-zinc-50">
+      {/* More compact header */}
+      <header className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 py-3 px-6 shadow-md">
+        <div className="max-w-screen-2xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold text-white">
+                DiffCatcher
+                <span className="ml-2 text-xs bg-white/20 px-1.5 py-0.5 rounded-full text-white/90 uppercase tracking-wide">Beta</span>
+              </h1>
+            </div>
+            
+            {/* Navigation buttons */}
+            <nav className="flex items-center space-x-1 sm:space-x-2">
+              {[
+                { name: 'Home', href: '/' },
+                { name: 'About', href: '/about' },
+                { name: 'Text Compare', href: '/text-compare' },
+                { name: 'Code Compare', href: '/code-compare' },
+                { name: 'Document Compare', href: '/document-compare' }
+              ].map((item) => (
+                <Link 
+                  key={item.name}
+                  href={item.href}
+                  className="px-2 py-1.5 text-xs sm:text-sm text-white hover:bg-white/10 rounded-md transition-colors"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </nav>
+          </div>
         </div>
       </header>
       
-      <main className="flex-grow flex flex-col p-6 max-w-screen-2xl mx-auto w-full">
-        {/* Show either input or diff view, not both */}
+      {/* Main content with fixed height to ensure footer visibility */}
+      <main className="flex-grow flex flex-col p-4 max-w-screen-2xl mx-auto w-full overflow-hidden" style={{height: 'calc(100vh - 120px)'}}>
         {!diffResult ? (
-          <div className="flex gap-6 flex-col md:flex-row h-full">
+          <div className="h-full flex gap-6 flex-col md:flex-row">
             <div className="flex-1">
               <FileInput
                 label="Original File"
                 content={leftContent}
                 onChange={setLeftContent}
-                language="abap"
+                language="plaintext"
               />
             </div>
             <div className="flex-1">
@@ -91,12 +116,12 @@ export default function Home() {
                 label="Modified File"
                 content={rightContent}
                 onChange={setRightContent}
-                language="abap"
+                language="plaintext"
               />
             </div>
           </div>
         ) : (
-          <div className="h-[calc(100vh-120px)]">
+          <div className="h-full">
             <DiffViewer 
               diffResult={diffResult} 
               leftContent={leftContent}
@@ -108,10 +133,16 @@ export default function Home() {
         )}
       </main>
       
-      {/* Add a sleek footer */}
-      <footer className="py-4 text-center text-sm text-zinc-500 border-t border-zinc-200">
+      {/* Fixed footer that doesn't scroll */}
+      <footer className="py-2 text-center text-sm text-zinc-500 border-t border-zinc-200 bg-white shadow-sm">
         <div className="max-w-screen-2xl mx-auto">
-          DeltaDiff &copy; {new Date().getFullYear()} • Fast code comparison and merging
+          <div className="flex justify-center items-center gap-2">
+            <span>DiffCatcher &copy; {new Date().getFullYear()}</span>
+            <span>•</span>
+            <span>Fast code comparison and merging</span>
+            <span>•</span>
+            <span>Supports 20+ programming languages</span>
+          </div>
         </div>
       </footer>
     </div>

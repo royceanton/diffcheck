@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DeltaDiff - Modern Code Comparison Tool",
-  description: "Compare, visualize differences, and merge code changes with precision.",
+  title: "DiffCatcher - Modern Code Comparison Tool",
+  description: "Compare, visualize, and merge code with syntax highlighting for 20+ programming languages.",
 };
 
 export default function RootLayout({

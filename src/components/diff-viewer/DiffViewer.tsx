@@ -7,6 +7,26 @@ import { useMonaco } from '@monaco-editor/react';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/vs.css';
 import 'highlight.js/styles/github.css';
+// Import popular programming languages
+import javascript from 'highlight.js/lib/languages/javascript';
+import typescript from 'highlight.js/lib/languages/typescript';
+import python from 'highlight.js/lib/languages/python';
+import java from 'highlight.js/lib/languages/java';
+import csharp from 'highlight.js/lib/languages/csharp';
+import cpp from 'highlight.js/lib/languages/cpp';
+import php from 'highlight.js/lib/languages/php';
+import ruby from 'highlight.js/lib/languages/ruby';
+import go from 'highlight.js/lib/languages/go';
+import rust from 'highlight.js/lib/languages/rust';
+import swift from 'highlight.js/lib/languages/swift';
+import kotlin from 'highlight.js/lib/languages/kotlin';
+import xml from 'highlight.js/lib/languages/xml';
+import css from 'highlight.js/lib/languages/css';
+import sql from 'highlight.js/lib/languages/sql';
+import bash from 'highlight.js/lib/languages/bash';
+import json from 'highlight.js/lib/languages/json';
+import yaml from 'highlight.js/lib/languages/yaml';
+import markdown from 'highlight.js/lib/languages/markdown';
 // Add diff-match-patch for word-level diff
 import { diff_match_patch } from 'diff-match-patch';
 
@@ -18,8 +38,8 @@ hljs.registerLanguage('abap', function(hljs) {
     keywords: {
       keyword:
       'REPORT DATA TYPE TABLE OF SELECT FROM INTO UP TO ROWS ' +
-      'LOOP AT ENDLOOP IF ENDIF WRITE ENDMETHOD CALL FUNCTION ' +
-      'METHOD IMPORTING EXPORTING CHANGING FORM ENDFORM PERFORM ' +
+               'LOOP AT ENDLOOP IF ENDIF WRITE ENDMETHOD CALL FUNCTION ' +
+               'METHOD IMPORTING EXPORTING CHANGING FORM ENDFORM PERFORM ' +
       'CLEAR FIELD-SYMBOLS FIELD SYMBOLS ASSIGN CP EQ NE GT LT GE LE VALUE CONSTANTS ' +
       'CLASS ENDCLASS TRY CATCH ENDTRY FIELD-SYMBOLS DEFINITION RETURNING ' +
       'METHODS IMPLEMENTATION USING ELSE PUBLIC FINAL CREATE ' +
@@ -130,6 +150,31 @@ hljs.registerLanguage('abap', function(hljs) {
     ]
   };
 });
+
+// Register languages for syntax highlighting
+// After the ABAP language registration
+// Register common programming languages
+hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('typescript', typescript);
+hljs.registerLanguage('python', python);
+hljs.registerLanguage('java', java);
+hljs.registerLanguage('csharp', csharp);
+hljs.registerLanguage('cpp', cpp);
+hljs.registerLanguage('php', php);
+hljs.registerLanguage('ruby', ruby);
+hljs.registerLanguage('go', go);
+hljs.registerLanguage('rust', rust);
+hljs.registerLanguage('swift', swift);
+hljs.registerLanguage('kotlin', kotlin);
+hljs.registerLanguage('html', xml); // XML handles HTML
+hljs.registerLanguage('xml', xml);
+hljs.registerLanguage('css', css);
+hljs.registerLanguage('sql', sql);
+hljs.registerLanguage('shell', bash);
+hljs.registerLanguage('bash', bash);
+hljs.registerLanguage('json', json);
+hljs.registerLanguage('yaml', yaml);
+hljs.registerLanguage('markdown', markdown);
 
 // Add this style object to ensure ABAP keywords are properly styled
 const abapStyles = {
@@ -598,7 +643,7 @@ export default function DiffViewer({
   // Determine if undo/redo are available
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
-
+  
   return (
     <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden h-full flex flex-col shadow-sm transition-all">
       {/* Header with summary and controls */}
@@ -698,13 +743,13 @@ export default function DiffViewer({
             </button>
             
             {/* Reset button */}
-            <button
+        <button
               className="px-3 py-1.5 text-sm bg-indigo-600 text-white hover:bg-indigo-700 rounded-md transition-colors shadow-sm"
               onClick={handleReset}
               type="button"
-            >
-              Reset Comparison
-            </button>
+        >
+          Reset Comparison
+        </button>
           </div>
         </div>
       </div>
@@ -824,13 +869,13 @@ export default function DiffViewer({
                       className={`flex ${getLineClass(line.type, 'left')} cursor-pointer`}
                     >
                       <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-zinc-500 select-none border-r border-zinc-200 bg-zinc-50 text-xs">
-                        {line.lineNumber.left || ' '}
-                      </div>
-                      <div className="w-full overflow-x-auto">
-                        {line.content.left ? (
-                          <CodeLine 
-                            content={line.content.left} 
-                            language="abap"
+                  {line.lineNumber.left || ' '}
+                </div>
+                <div className="w-full overflow-x-auto">
+                  {line.content.left ? (
+                    <CodeLine 
+                      content={line.content.left} 
+                            language="auto"
                             isModified={line.type === 'modified'}
                             otherContent={line.content.right || ''}
                             side="left"
@@ -861,14 +906,14 @@ export default function DiffViewer({
                         {line.content.left ? (
                           <CodeLine 
                             content={line.content.left} 
-                            language="abap"
+                            language="auto"
                             side="left"
-                          />
-                        ) : (
-                          <div className="px-2 py-0 h-5"></div>
-                        )}
-                      </div>
-                    </div>
+                    />
+                  ) : (
+                    <div className="px-2 py-0 h-5"></div>
+                  )}
+                </div>
+              </div>
                   ))}
                 </div>
               </div>
@@ -941,8 +986,8 @@ export default function DiffViewer({
                   <span className={`${selectedChunk === chunkIndex ? 'text-emerald-600 font-medium text-sm px-2 py-0.5 bg-emerald-50 rounded-full' : 'text-emerald-600 font-medium'}`}>
                     {chunk.additions > 0 ? `+${chunk.additions} ${chunk.additions === 1 ? 'addition' : 'additions'}` : ''}
                   </span>
-                </div>
-                
+              </div>
+              
                 {/* Chunk content */}
                 <div
                   onDoubleClick={(e) => {
@@ -961,21 +1006,21 @@ export default function DiffViewer({
                       className={`flex ${getLineClass(line.type, 'right')} cursor-pointer`}
                     >
                       <div className="w-10 min-w-[40px] flex-shrink-0 text-right pr-2 py-0 text-zinc-500 select-none border-r border-zinc-200 bg-zinc-50 text-xs">
-                        {line.lineNumber.right || ' '}
-                      </div>
-                      <div className="w-full overflow-x-auto">
-                        {line.content.right ? (
-                          <CodeLine 
-                            content={line.content.right} 
-                            language="abap"
+                  {line.lineNumber.right || ' '}
+                </div>
+                <div className="w-full overflow-x-auto">
+                  {line.content.right ? (
+                    <CodeLine 
+                      content={line.content.right} 
+                            language="auto"
                             isModified={line.type === 'modified'}
                             otherContent={line.content.left || ''}
                             side="right"
-                          />
-                        ) : (
-                          <div className="px-2 py-0 h-5"></div>
-                        )}
-                      </div>
+                    />
+                  ) : (
+                    <div className="px-2 py-0 h-5"></div>
+                  )}
+                </div>
                     </div>
                   ))}
                 </div>
@@ -998,15 +1043,15 @@ export default function DiffViewer({
                         {line.content.right ? (
                           <CodeLine 
                             content={line.content.right} 
-                            language="abap"
+                            language="auto"
                             side="right"
                           />
                         ) : (
                           <div className="px-2 py-0 h-5"></div>
                         )}
-                      </div>
-                    </div>
-                  ))}
+              </div>
+            </div>
+          ))}
                 </div>
               </div>
             );
@@ -1067,75 +1112,89 @@ export default function DiffViewer({
 // Separated component for code lines with syntax highlighting and word-level diffs
 interface CodeLineProps {
   content: string;
-  language: string;
+  language: string | 'auto';
   isModified?: boolean;
   otherContent?: string;
   side: 'left' | 'right';
 }
 
-function CodeLine({ content, language, isModified = false, otherContent = '', side }: CodeLineProps) {
+function CodeLine({ content, language = 'abap', isModified = false, otherContent = '', side }: CodeLineProps) {
   const codeRef = useRef<HTMLPreElement>(null);
+  
+  // Helper function to detect language from content
+  const detectLanguage = (content: string, defaultLang = 'abap') => {
+    if (!content) return defaultLang;
+    
+    // Pattern matching for common languages
+    if (content.includes('import ') || content.includes('function ') || content.includes('const ') || content.includes('class ')) {
+      return content.includes('import type ') || content.includes('interface ') ? 'typescript' : 'javascript';
+    }
+    if (content.includes('def ') && content.includes(':')) return 'python';
+    if (content.includes('<html') || content.match(/<\w+>.*<\/\w+>/)) return 'html';
+    if (content.includes('public class') || content.includes('import java.')) return 'java';
+    if (content.includes('using System;') || content.includes('namespace ')) return 'csharp';
+    if (content.includes('#include') || content.includes('int main(')) return 'cpp';
+    if (content.includes('<?php')) return 'php';
+    if (content.includes('SELECT') && content.includes('FROM')) return 'sql';
+    if (content.includes('REPORT') || content.includes('DATA:')) return 'abap';
+    
+    return defaultLang;
+  };
   
   useEffect(() => {
     if (codeRef.current) {
-      // First, perform regular syntax highlighting
-      const syntaxHighlighted = hljs.highlight(content, { language, ignoreIllegals: true }).value;
-      
-      if (isModified && otherContent) {
-        try {
-          // For modified lines, perform precise word-level diff
-          const dmp = new diff_match_patch();
-          
-          // Improve diff quality with closer word boundaries
-          dmp.Diff_EditCost = 4; 
-          
-          // Run the diff algorithm in the correct direction
-          const diffs = side === 'left' 
-            ? dmp.diff_main(content, otherContent)
-            : dmp.diff_main(otherContent, content);
+      try {
+        // First, perform regular syntax highlighting with language detection
+        const detectedLanguage = language === 'auto' ? detectLanguage(content, 'abap') : language;
+        
+        const syntaxHighlighted = hljs.highlight(content, { 
+          language: detectedLanguage, 
+          ignoreIllegals: true 
+        }).value;
+        
+        if (isModified && otherContent) {
+          try {
+            // For modified lines, perform precise word-level diff
+            const dmp = new diff_match_patch();
             
-          // Clean up the diff to be more human-readable
-          dmp.diff_cleanupSemantic(diffs);
-          dmp.diff_cleanupEfficiency(diffs);
-          
-          // Create a syntax-highlighted version that we can overlay with diff markup
-          codeRef.current.innerHTML = syntaxHighlighted;
-          
-          // Find text nodes to apply diff highlighting
-          const textNodes = getTextNodes(codeRef.current);
-          if (textNodes.length > 0) {
-            // Apply word diff highlighting
-            applyWordDiffHighlighting(textNodes, diffs, side);
+            // Improve diff quality with closer word boundaries
+            dmp.Diff_EditCost = 4; 
+            
+            // Run the diff algorithm in the correct direction
+            const diffs = side === 'left' 
+              ? dmp.diff_main(content, otherContent)
+              : dmp.diff_main(otherContent, content);
+              
+            // Clean up the diff to be more human-readable
+            dmp.diff_cleanupSemantic(diffs);
+            dmp.diff_cleanupEfficiency(diffs);
+            
+            // Create a syntax-highlighted version that we can overlay with diff markup
+            codeRef.current.innerHTML = syntaxHighlighted;
+            
+            // Find text nodes to apply diff highlighting
+            const textNodes = getTextNodes(codeRef.current);
+            if (textNodes.length > 0) {
+              // Apply word diff highlighting
+              applyWordDiffHighlighting(textNodes, diffs, side);
+            }
+          } catch (e) {
+            // Fallback to regular syntax highlighting if the diff fails
+            codeRef.current.innerHTML = syntaxHighlighted;
           }
-        } catch (e) {
-          // Fallback to regular syntax highlighting if the diff fails
+        } else {
+          // Regular syntax highlighting for unchanged, purely added or purely removed lines
           codeRef.current.innerHTML = syntaxHighlighted;
         }
-      } else {
-        // Regular syntax highlighting for unchanged, purely added or purely removed lines
-        codeRef.current.innerHTML = syntaxHighlighted;
-      }
-      
-      // Apply ABAP-specific styling to highlighted elements
-      if (language === 'abap' && codeRef.current.querySelectorAll) {
-        // Apply keyword styling
-        const keywords = codeRef.current.querySelectorAll('.hljs-keyword');
-        keywords.forEach(keyword => {
-          (keyword as HTMLElement).style.color = '#0000ff';
-          (keyword as HTMLElement).style.fontWeight = 'bold';
-        });
         
-        // Apply string styling
-        const strings = codeRef.current.querySelectorAll('.hljs-string');
-        strings.forEach(str => {
-          (str as HTMLElement).style.color = '#a31515';
-        });
+        // Apply language-specific styling to highlighted elements if needed
+        // (This part is now more generic to work with all languages)
         
-        // Apply comment styling
-        const comments = codeRef.current.querySelectorAll('.hljs-comment');
-        comments.forEach(comment => {
-          (comment as HTMLElement).style.color = '#008000';
-        });
+      } catch (e) {
+        // If highlighting fails, just display as plain text
+        if (codeRef.current) {
+          codeRef.current.textContent = content;
+        }
       }
     }
   }, [content, language, isModified, otherContent, side]);
@@ -1297,10 +1356,10 @@ function getLineClass(type: string, side: 'left' | 'right') {
       default: return '';
     }
   } else {
-    switch (type) {
+  switch (type) {
       case 'added': return 'bg-emerald-50'; // Light emerald for added lines
       case 'modified': return 'bg-emerald-50'; // Light emerald for modified lines on right
-      default: return '';
+    default: return '';
     }
   }
 } 

@@ -11,7 +11,7 @@ interface FileInputProps {
   language?: string;
 }
 
-export default function FileInput({ label, content, onChange, language = 'abap' }: FileInputProps) {
+export default function FileInput({ label, content, onChange, language = 'plaintext' }: FileInputProps) {
   const monaco = useMonaco();
   
   // Register ABAP keywords for syntax highlighting
@@ -105,7 +105,7 @@ export default function FileInput({ label, content, onChange, language = 'abap' 
   
   // Try to detect language from file content
   const detectLanguage = (content: string) => {
-    if (!content) return language;
+    if (!content || content.trim() === '') return 'plaintext';
     
     // Check for ABAP keywords and patterns
     if (content.includes('REPORT') || 
@@ -117,11 +117,108 @@ export default function FileInput({ label, content, onChange, language = 'abap' 
       return 'abap';
     }
     
-    // Other languages
-    if (content.includes('import React') || content.includes('from "react"')) return 'typescript';
-    if (content.includes('def ') && content.includes(':')) return 'python';
-    if (content.includes('<html') || content.includes('<!DOCTYPE')) return 'html';
-    if (content.includes('package ') && content.includes(';')) return 'java';
+    // JavaScript/TypeScript
+    if (content.includes('import React') || 
+        content.includes('from "react"') || 
+        content.includes('const ') || 
+        content.includes('function ') ||
+        content.includes('export default') ||
+        content.includes('interface ') ||
+        content.includes('class ') && content.includes('extends')) {
+      return 'typescript';
+    }
+    
+    // Python
+    if (content.includes('def ') && content.includes(':') || 
+        content.includes('import ') && content.includes('from ') ||
+        content.match(/if\s+.*:/)) {
+      return 'python';
+    }
+    
+    // HTML/XML
+    if (content.includes('<html') || 
+        content.includes('<!DOCTYPE') || 
+        content.match(/<\w+>.*<\/\w+>/)) {
+      return 'html';
+    }
+    
+    // Java
+    if (content.includes('package ') && content.includes(';') ||
+        content.includes('public class') ||
+        content.match(/import\s+java\./)) {
+      return 'java';
+    }
+    
+    // C#
+    if (content.includes('namespace ') ||
+        content.includes('using System;') ||
+        content.match(/public\s+class/) && content.includes('{')) {
+      return 'csharp';
+    }
+    
+    // C/C++
+    if (content.includes('#include') ||
+        content.includes('int main(') ||
+        content.match(/std::/)) {
+      return 'cpp';
+    }
+    
+    // PHP
+    if (content.includes('<?php') ||
+        content.includes('namespace ') && content.includes('<?')) {
+      return 'php';
+    }
+    
+    // Ruby
+    if (content.includes('def ') && content.includes('end') ||
+        content.includes('require ') ||
+        content.includes('class ') && content.includes('end')) {
+      return 'ruby';
+    }
+    
+    // Go
+    if (content.includes('package ') && content.includes('func ') ||
+        content.includes('import (')) {
+      return 'go';
+    }
+    
+    // SQL
+    if (content.match(/SELECT.*FROM/) ||
+        content.match(/CREATE\s+TABLE/) ||
+        content.match(/INSERT\s+INTO/)) {
+      return 'sql';
+    }
+    
+    // JSON
+    if ((content.trim().startsWith('{') && content.trim().endsWith('}')) ||
+        (content.trim().startsWith('[') && content.trim().endsWith(']'))) {
+      return 'json';
+    }
+    
+    // YAML
+    if (content.match(/^\s*[\w-]+\s*:\s*.*$/m) && 
+        !content.includes('{') && !content.includes('[')) {
+      return 'yaml';
+    }
+    
+    // CSS
+    if (content.match(/[\w-]+\s*{[\s\S]*?}/)) {
+      return 'css';
+    }
+    
+    // Shell/Bash
+    if (content.includes('#!/bin/bash') || 
+        content.includes('#!/bin/sh') ||
+        content.match(/if\s+\[\[.*\]\]/)) {
+      return 'shell';
+    }
+    
+    // Markdown
+    if (content.match(/^#\s+/) || 
+        content.match(/\*\*(.*?)\*\*/) ||
+        content.match(/\[(.*?)\]\((.*?)\)/)) {
+      return 'markdown';
+    }
     
     return language;
   };
@@ -130,8 +227,8 @@ export default function FileInput({ label, content, onChange, language = 'abap' 
     <div className="flex flex-col h-[calc(100vh-140px)] border border-zinc-200 rounded-lg overflow-hidden bg-white shadow-sm transition-all hover:shadow-md">
       <div className="flex justify-between items-center px-4 py-3 bg-white border-b border-zinc-200">
         <h3 className="font-medium text-sm text-zinc-800">{label}</h3>
-        <div className="text-xs px-2 py-1 rounded-full bg-zinc-100 text-zinc-600 font-medium">
-          {detectLanguage(content).toUpperCase()}
+        <div className={`text-xs px-2 py-1 rounded-full ${content ? 'bg-indigo-100 text-indigo-700' : 'bg-zinc-100 text-zinc-600'} font-medium transition-colors`}>
+          {detectLanguage(content) === 'plaintext' ? 'PLAIN TEXT' : detectLanguage(content).toUpperCase()}
         </div>
       </div>
 
