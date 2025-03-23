@@ -637,6 +637,7 @@ export default function DiffViewer({
                 className="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-md flex items-center transition-colors font-medium"
                 aria-label="Previous change"
                 disabled={!hasChanges}
+                type="button"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1">
                   <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 011.06.02z" clipRule="evenodd" />
@@ -648,6 +649,7 @@ export default function DiffViewer({
                 className="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-md flex items-center transition-colors font-medium"
                 aria-label="Next change"
                 disabled={!hasChanges}
+                type="button"
               >
                 Next
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1">
@@ -669,6 +671,7 @@ export default function DiffViewer({
               onClick={handleUndo}
               disabled={!canUndo}
               title="Undo last change"
+              type="button"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M7.793 2.232a.75.75 0 01-.025 1.06L3.622 7.25h10.003a5.375 5.375 0 010 10.75H10.75a.75.75 0 010-1.5h2.875a3.875 3.875 0 000-7.75H3.622l4.146 3.957a.75.75 0 01-1.036 1.085l-5.5-5.25a.75.75 0 010-1.085l5.5-5.25a.75.75 0 011.06.025z" clipRule="evenodd" />
@@ -686,6 +689,7 @@ export default function DiffViewer({
               onClick={handleRedo}
               disabled={!canRedo}
               title="Redo last undone change"
+              type="button"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M12.207 2.232a.75.75 0 00.025 1.06L16.378 7.25H6.375a5.375 5.375 0 000 10.75h2.875a.75.75 0 000-1.5H6.375a3.875 3.875 0 010-7.75h10.003l-4.146 3.957a.75.75 0 001.036 1.085l5.5-5.25a.75.75 0 000-1.085l-5.5-5.25a.75.75 0 00-1.06.025z" clipRule="evenodd" />
@@ -697,6 +701,7 @@ export default function DiffViewer({
             <button
               className="px-3 py-1.5 text-sm bg-indigo-600 text-white hover:bg-indigo-700 rounded-md transition-colors shadow-sm"
               onClick={handleReset}
+              type="button"
             >
               Reset Comparison
             </button>
@@ -713,6 +718,7 @@ export default function DiffViewer({
             <button 
               onClick={copyLeftContent}
               className="px-2 py-1 text-xs bg-zinc-200 hover:bg-zinc-300 rounded-md transition-colors"
+              type="button"
             >
               Copy
             </button>
@@ -725,6 +731,7 @@ export default function DiffViewer({
             <button 
               onClick={copyRightContent}
               className="px-2 py-1 text-xs bg-zinc-200 hover:bg-zinc-300 rounded-md transition-colors"
+              type="button"
             >
               Copy
             </button>
@@ -788,6 +795,7 @@ export default function DiffViewer({
                           mergeLeftToRight(chunkIndex);
                         }}
                         className="px-3 py-2 text-sm bg-rose-500 text-white hover:bg-rose-600 rounded-md transition-all duration-300 shadow-sm flex items-center font-medium group animate-fade-in"
+                        type="button"
                       >
                         Merge to right
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1.5 group-hover:translate-x-0.5 transition-transform">
@@ -917,6 +925,7 @@ export default function DiffViewer({
                           mergeRightToLeft(chunkIndex);
                         }}
                         className="px-3 py-2 text-sm bg-emerald-500 text-white hover:bg-emerald-600 rounded-md transition-all duration-300 shadow-sm flex items-center font-medium group animate-fade-in"
+                        type="button"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1.5 group-hover:-translate-x-0.5 transition-transform">
                           <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
