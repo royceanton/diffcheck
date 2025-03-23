@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Prompt } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const promptFont = Prompt({
+  weight: ['300', '400', '500', '600', '700'],
   subsets: ["latin"],
+  variable: "--font-prompt",
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
@@ -24,8 +27,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="antialiased">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans bg-zinc-50 text-zinc-900`}
+        className={`${promptFont.variable} ${geistMono.variable} font-sans bg-zinc-50 text-zinc-900`}
       >
         {children}
       </body>
