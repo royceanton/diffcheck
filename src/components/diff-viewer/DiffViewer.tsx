@@ -1243,9 +1243,32 @@ function CodeLine({ content, language = 'abap', isModified = false, otherContent
           codeRef.current.innerHTML = syntaxHighlighted;
         }
         
-        // Apply language-specific styling to highlighted elements if needed
-        // (This part is now more generic to work with all languages)
-        
+        // Apply ABAP style overrides to ensure keywords are blue
+        if (detectedLanguage === 'abap' && codeRef.current) {
+          // Find and style keywords in blue
+          const keywordElements = codeRef.current.querySelectorAll('.hljs-keyword');
+          keywordElements.forEach(el => {
+            if (el instanceof HTMLElement) {
+              el.style.color = '#0000ff';
+              el.style.fontWeight = 'bold';
+            }
+          });
+          
+          // Apply other ABAP-specific styling
+          const commentElements = codeRef.current.querySelectorAll('.hljs-comment');
+          commentElements.forEach(el => {
+            if (el instanceof HTMLElement) {
+              el.style.color = '#008000';
+            }
+          });
+          
+          const stringElements = codeRef.current.querySelectorAll('.hljs-string');
+          stringElements.forEach(el => {
+            if (el instanceof HTMLElement) {
+              el.style.color = '#a31515';
+            }
+          });
+        }
       } catch (e) {
         // If highlighting fails, just display as plain text
         if (codeRef.current) {
@@ -1356,11 +1379,11 @@ function applyWordDiffHighlighting(textNodes: Text[], diffs: [number, string][],
             const changeType = changes[pos].type;
             
             if (changeType === -1 && side === 'left') {
-              // Highlight deletion in left pane
+              // Highlight deletion in left pane - revert to original red
               span.style.backgroundColor = '#ffcccc';
               span.style.color = '#770000';
             } else if (changeType === 1 && side === 'right') {
-              // Highlight addition in right pane
+              // Keep highlight addition in right pane as green
               span.style.backgroundColor = '#ccffcc';
               span.style.color = '#007700';
             }
@@ -1407,8 +1430,8 @@ function getLineClass(type: string, side: 'left' | 'right') {
   
   if (side === 'left') {
     switch (type) {
-      case 'removed': return 'bg-rose-50'; // Light rose for removed lines
-      case 'modified': return 'bg-rose-50'; // Light rose for modified lines on left
+      case 'removed': return 'bg-rose-50'; // Light rose for removed lines (reverted)
+      case 'modified': return 'bg-rose-50'; // Light rose for modified lines on left (reverted)
       default: return '';
     }
   } else {
