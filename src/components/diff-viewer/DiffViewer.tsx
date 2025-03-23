@@ -747,15 +747,24 @@ export default function DiffViewer({
               <div 
                 key={`chunk-left-${chunkIndex}`}
                 ref={(el) => { chunkRefs.current[chunkIndex] = el; }}
-                className={`${
-                  selectedChunk === chunkIndex ? 'ring-2 ring-indigo-500' : ''
+                className={`relative transition-all duration-200 ${
+                  selectedChunk === chunkIndex 
+                    ? 'ring-2 ring-indigo-500 shadow-lg z-10 bg-white before:absolute before:inset-0 before:bg-indigo-100/30 before:z-[-1] before:blur-sm before:rounded-lg before:opacity-60' 
+                    : `${selectedChunk !== null ? 'opacity-80' : ''} hover:opacity-100`
                 } ${chunkIndex > 0 ? 'border-t border-zinc-200' : ''}`}
                 onClick={hasDifferences ? () => handleChunkClick(chunkIndex) : undefined}
               >
+                {/* Selection indicator bar */}
+                {selectedChunk === chunkIndex && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-indigo-400 via-indigo-500 to-violet-500 animate-pulse-subtle"></div>
+                )}
+
                 {/* Chunk header - only show for chunks with differences */}
                 <div 
                   className={`bg-zinc-50 px-3 py-1.5 text-xs text-zinc-700 flex justify-between items-center ${
-                    selectedChunk === chunkIndex ? 'cursor-pointer' : ''
+                    selectedChunk === chunkIndex 
+                      ? 'bg-gradient-to-r from-zinc-100 to-zinc-50 cursor-pointer border-b border-zinc-200' 
+                      : ''
                   }`}
                   onDoubleClick={(e) => {
                     // Only trigger if this chunk is already selected
@@ -766,7 +775,7 @@ export default function DiffViewer({
                   }}
                   title={selectedChunk === chunkIndex ? "Double-click to merge to right" : ""}
                 >
-                  <span className="text-rose-600 font-medium">
+                  <span className={`${selectedChunk === chunkIndex ? 'text-rose-600 font-medium text-sm px-2 py-0.5 bg-rose-50 rounded-full' : 'text-rose-600 font-medium'}`}>
                     {chunk.deletions > 0 ? `−${chunk.deletions} ${chunk.deletions === 1 ? 'removal' : 'removals'}` : ''}
                   </span>
                   
@@ -778,10 +787,10 @@ export default function DiffViewer({
                           e.stopPropagation();
                           mergeLeftToRight(chunkIndex);
                         }}
-                        className="px-3 py-2 text-sm bg-rose-500 text-white hover:bg-rose-600 rounded-md transition-colors shadow-sm flex items-center font-medium"
+                        className="px-3 py-2 text-sm bg-rose-500 text-white hover:bg-rose-600 rounded-md transition-all duration-300 shadow-sm flex items-center font-medium group animate-fade-in"
                       >
                         Merge to right
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1.5 group-hover:translate-x-0.5 transition-transform">
                           <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
                         </svg>
                       </button>
@@ -871,15 +880,24 @@ export default function DiffViewer({
             return hasDifferences ? (
               <div 
                 key={`chunk-right-${chunkIndex}`}
-                className={`${
-                  selectedChunk === chunkIndex ? 'ring-2 ring-indigo-500' : ''
+                className={`relative transition-all duration-200 ${
+                  selectedChunk === chunkIndex 
+                    ? 'ring-2 ring-indigo-500 shadow-lg z-10 bg-white before:absolute before:inset-0 before:bg-indigo-100/30 before:z-[-1] before:blur-sm before:rounded-lg before:opacity-60' 
+                    : `${selectedChunk !== null ? 'opacity-80' : ''} hover:opacity-100`
                 } ${chunkIndex > 0 ? 'border-t border-zinc-200' : ''}`}
                 onClick={hasDifferences ? () => handleChunkClick(chunkIndex) : undefined}
               >
+                {/* Selection indicator bar */}
+                {selectedChunk === chunkIndex && (
+                  <div className="absolute right-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-indigo-400 via-indigo-500 to-violet-500 animate-pulse-subtle"></div>
+                )}
+
                 {/* Chunk header - only show for chunks with differences */}
                 <div 
                   className={`bg-zinc-50 px-3 py-1.5 text-xs text-zinc-700 flex justify-between items-center ${
-                    selectedChunk === chunkIndex ? 'cursor-pointer' : ''
+                    selectedChunk === chunkIndex 
+                      ? 'bg-gradient-to-r from-zinc-50 to-zinc-100 cursor-pointer border-b border-zinc-200' 
+                      : ''
                   }`}
                   onDoubleClick={(e) => {
                     // Only trigger if this chunk is already selected
@@ -890,7 +908,7 @@ export default function DiffViewer({
                   }}
                   title={selectedChunk === chunkIndex ? "Double-click to merge to left" : ""}
                 >
-                  <span className="text-emerald-600 font-medium">
+                  <span className={`${selectedChunk === chunkIndex ? 'text-emerald-600 font-medium text-sm px-2 py-0.5 bg-emerald-50 rounded-full' : 'text-emerald-600 font-medium'}`}>
                     {chunk.additions > 0 ? `+${chunk.additions} ${chunk.additions === 1 ? 'addition' : 'additions'}` : ''}
                   </span>
                   
@@ -902,9 +920,9 @@ export default function DiffViewer({
                           e.stopPropagation();
                           mergeRightToLeft(chunkIndex);
                         }}
-                        className="px-3 py-2 text-sm bg-emerald-500 text-white hover:bg-emerald-600 rounded-md transition-colors shadow-sm flex items-center font-medium"
+                        className="px-3 py-2 text-sm bg-emerald-500 text-white hover:bg-emerald-600 rounded-md transition-all duration-300 shadow-sm flex items-center font-medium group animate-fade-in"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1.5 group-hover:-translate-x-0.5 transition-transform">
                           <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
                         </svg>
                         Merge to left
