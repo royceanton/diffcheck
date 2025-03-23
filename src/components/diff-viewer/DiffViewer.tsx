@@ -300,7 +300,37 @@ export default function DiffViewer({
   
   // Function to determine if a chunk has actual differences
   const chunkHasDifferences = (chunk: DiffChunk): boolean => {
-    return chunk.additions > 0 || chunk.deletions > 0;
+    // First check the additions and deletions counters
+    if (chunk.additions === 0 && chunk.deletions === 0) {
+      return false;
+    }
+    
+    // Even if counters indicate differences, check if lines are actually different
+    // This handles cases where content became identical after merges
+    for (const line of chunk.lines) {
+      // Skip lines that don't have content on both sides
+      if (line.content.left === null || line.content.right === null) {
+        continue;
+      }
+      
+      // If any line has different content between left and right, 
+      // then there's a real difference
+      if (line.content.left !== line.content.right) {
+        return true;
+      }
+    }
+    
+    // If we reach here, all lines that exist on both sides are identical
+    // But we need to check if there are lines that only exist on one side
+    const hasLeftOnlyLines = chunk.lines.some(line => 
+      line.content.left !== null && line.content.right === null
+    );
+    
+    const hasRightOnlyLines = chunk.lines.some(line => 
+      line.content.left === null && line.content.right !== null
+    );
+    
+    return hasLeftOnlyLines || hasRightOnlyLines;
   };
   
   // Sort chunks by their line numbers to maintain correct order
@@ -517,9 +547,16 @@ export default function DiffViewer({
     // Call the callback with updated content
     if (onMergeChanges) {
       onMergeChanges(leftContent, newRightContent);
+      
+      // Force a UI refresh to ensure the diff is properly displayed
+      // This helps with the case where merge results in identical content
+      setTimeout(() => {
+        // This timeout ensures the state update from onMergeChanges has time to trigger a re-render
+        setSelectedChunk(null);
+      }, 0);
     }
     
-    // Force re-render to show the updated diff
+    // Reset selected chunk
     setSelectedChunk(null);
   };
   
@@ -658,9 +695,16 @@ export default function DiffViewer({
     // Call the callback with updated content
     if (onMergeChanges) {
       onMergeChanges(newLeftContent, rightContent);
+      
+      // Force a UI refresh to ensure the diff is properly displayed
+      // This helps with the case where merge results in identical content
+      setTimeout(() => {
+        // This timeout ensures the state update from onMergeChanges has time to trigger a re-render
+        setSelectedChunk(null);
+      }, 0);
     }
     
-    // Force re-render to show the updated diff
+    // Reset selected chunk
     setSelectedChunk(null);
   };
   
@@ -745,8 +789,8 @@ export default function DiffViewer({
             <div className="flex items-center space-x-2">
               <div className="text-sm text-zinc-600 hidden md:block">
                 {selectedChunk !== null ? `Change ${selectedChunk + 1} of ${diffResult.chunks.filter(chunk => chunkHasDifferences(chunk)).length}` : ''}
-              </div>
-              <button 
+        </div>
+        <button
                 onClick={navigatePrevChunk}
                 className="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-md flex items-center transition-colors font-medium"
                 aria-label="Previous change"
@@ -956,11 +1000,11 @@ export default function DiffViewer({
                             isModified={line.type === 'modified'}
                             otherContent={line.content.right || ''}
                             side="left"
-                          />
-                        ) : (
-                          <div className="px-2 py-0 h-5"></div>
-                        )}
-                      </div>
+                    />
+                  ) : (
+                    <div className="px-2 py-0 h-5"></div>
+                  )}
+                </div>
                     </div>
                   ))}
                 </div>
@@ -996,8 +1040,8 @@ export default function DiffViewer({
               </div>
             );
           })}
-        </div>
-        
+              </div>
+              
         {/* Right pane */}
         <div 
           ref={rightPaneRef}
@@ -1063,8 +1107,8 @@ export default function DiffViewer({
                   <span className={`${selectedChunk === chunkIndex ? 'text-emerald-600 font-medium text-sm px-2 py-0.5 bg-emerald-50 rounded-full' : 'text-emerald-600 font-medium'}`}>
                     {chunk.additions > 0 ? `+${chunk.additions} ${chunk.additions === 1 ? 'addition' : 'additions'}` : ''}
                   </span>
-              </div>
-              
+                </div>
+                
                 {/* Chunk content */}
                 <div
                   onDoubleClick={(e) => {
@@ -1129,8 +1173,8 @@ export default function DiffViewer({
               </div>
             </div>
           ))}
-                </div>
-              </div>
+        </div>
+      </div>
             );
           })}
         </div>
@@ -1539,10 +1583,10 @@ function getLineClass(type: string, side: 'left' | 'right') {
   }
   
   if (side === 'left') {
-    switch (type) {
+  switch (type) {
       case 'removed': return 'bg-rose-50'; // Light rose for removed lines (reverted)
       case 'modified': return 'bg-rose-50'; // Light rose for modified lines on left (reverted)
-      default: return '';
+    default: return '';
     }
   } else {
   switch (type) {
