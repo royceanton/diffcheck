@@ -639,7 +639,7 @@ export default function DiffViewer({
                 disabled={!hasChanges}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1">
-                  <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 011.06.02z" clipRule="evenodd" />
                 </svg>
                 Prev
               </button>
@@ -908,12 +908,8 @@ export default function DiffViewer({
                   }}
                   title={selectedChunk === chunkIndex ? "Double-click to merge to left" : ""}
                 >
-                  <span className={`${selectedChunk === chunkIndex ? 'text-emerald-600 font-medium text-sm px-2 py-0.5 bg-emerald-50 rounded-full' : 'text-emerald-600 font-medium'}`}>
-                    {chunk.additions > 0 ? `+${chunk.additions} ${chunk.additions === 1 ? 'addition' : 'additions'}` : ''}
-                  </span>
-                  
-                  {/* Merge controls - visible only when chunk is selected */}
-                  {selectedChunk === chunkIndex && (
+                  {/* Merge controls - visible only when chunk is selected - moved to the left */}
+                  {selectedChunk === chunkIndex ? (
                     <div className="flex items-center space-x-1">
                       <button 
                         onClick={(e) => {
@@ -928,7 +924,14 @@ export default function DiffViewer({
                         Merge to left
                       </button>
                     </div>
+                  ) : (
+                    <div></div> /* Empty div to maintain flex spacing when button isn't shown */
                   )}
+                  
+                  {/* Additions count - moved to the right */}
+                  <span className={`${selectedChunk === chunkIndex ? 'text-emerald-600 font-medium text-sm px-2 py-0.5 bg-emerald-50 rounded-full' : 'text-emerald-600 font-medium'}`}>
+                    {chunk.additions > 0 ? `+${chunk.additions} ${chunk.additions === 1 ? 'addition' : 'additions'}` : ''}
+                  </span>
                 </div>
                 
                 {/* Chunk content */}
