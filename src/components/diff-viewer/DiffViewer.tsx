@@ -43,8 +43,9 @@ hljs.registerLanguage('abap', function(hljs) {
       'CLEAR FIELD-SYMBOLS FIELD SYMBOLS ASSIGN CP EQ NE GT LT GE LE VALUE CONSTANTS ' +
       'CLASS ENDCLASS TRY CATCH ENDTRY FIELD-SYMBOLS DEFINITION RETURNING ' +
       'METHODS IMPLEMENTATION USING ELSE PUBLIC FINAL CREATE ' +
-      'INSERT UPDATE DELETE MODIFY COMMIT ROLLBACK WHERE ORDER BY ' +
-      'GROUP BY HAVING JOIN INNER LEFT OUTER RIGHT FULL ON CREATE OBJECT START-OF-SELECTION ' +
+      'INSERT UPDATE DELETE MODIFY COMMIT ROLLBACK WHERE ORDER BY START' +
+      'GROUP BY HAVING JOIN INNER LEFT OUTER RIGHT FULL ON CREATE OBJECT ' +
+      'START-OF-SELECTION END-OF-SELECTION AT SELECTION-SCREEN USER-COMMAND ' +
       'ABAP_SYSTEM_TIMEZONE ABAP_USER_TIMEZONE ABAP-SOURCE ABBREVIATED ABS ' +
       'ABSTRACT ACCEPT ACCEPTING ACCORDING ACTIVATION ACTUAL ADABAS ADD ADD-CORRESPONDING ADJACENT ' +
       'AFTER ALIAS ALIASES ALIGN ALL ALLOCATE ALPHA ANALYSIS ANALYZER AND ' +
@@ -1245,29 +1246,118 @@ function CodeLine({ content, language = 'abap', isModified = false, otherContent
         
         // Apply ABAP style overrides to ensure keywords are blue
         if (detectedLanguage === 'abap' && codeRef.current) {
-          // Find and style keywords in blue
-          const keywordElements = codeRef.current.querySelectorAll('.hljs-keyword');
-          keywordElements.forEach(el => {
-            if (el instanceof HTMLElement) {
-              el.style.color = '#0000ff';
-              el.style.fontWeight = 'bold';
+          // Special handling for ABAP comment lines
+          if (content.trim().startsWith('*')) {
+            // Handle lines starting with * (entire line is a comment)
+            codeRef.current.style.color = '#888888';
+            codeRef.current.style.fontStyle = 'italic';
+            // Override any syntax highlighting that might have been applied
+            codeRef.current.innerHTML = `<span style="color: #888888; font-style: italic;">${content}</span>`;
+          } else if (content.includes('"')) {
+            // Handle comment indicators within a line (everything after " is a comment)
+            const commentIndex = content.indexOf('"');
+            const beforeComment = content.substring(0, commentIndex);
+            const commentPart = content.substring(commentIndex);
+            
+            // First apply normal syntax highlighting to the code part
+            let codeHtml = hljs.highlight(beforeComment, { 
+              language: 'abap', 
+              ignoreIllegals: true 
+            }).value;
+            
+            // Then add the comment part styled as a comment
+            codeRef.current.innerHTML = codeHtml + 
+              `<span style="color: #888888; font-style: italic;">${commentPart}</span>`;
+            
+            // Continue with keyword styling only for the code part
+            const keywordElements = codeRef.current.querySelectorAll('.hljs-keyword');
+            keywordElements.forEach(el => {
+              if (el instanceof HTMLElement) {
+                el.style.color = '#0000ff';
+                el.style.fontWeight = 'bold';
+              }
+            });
+          } else {
+            // Normal handling for non-comment lines
+            
+            // Find and style keywords in blue
+            const keywordElements = codeRef.current.querySelectorAll('.hljs-keyword');
+            keywordElements.forEach(el => {
+              if (el instanceof HTMLElement) {
+                el.style.color = '#0000ff';
+                el.style.fontWeight = 'bold';
+              }
+            });
+            
+            // Apply other ABAP-specific styling
+            const commentElements = codeRef.current.querySelectorAll('.hljs-comment');
+            commentElements.forEach(el => {
+              if (el instanceof HTMLElement) {
+                el.style.color = '#008000';
+              }
+            });
+            
+            const stringElements = codeRef.current.querySelectorAll('.hljs-string');
+            stringElements.forEach(el => {
+              if (el instanceof HTMLElement) {
+                el.style.color = '#a31515';
+              }
+            });
+            
+            // Enhanced handling for compound keywords like START-OF-SELECTION
+            const compoundKeywords = [
+              'START-OF-SELECTION', 'END-OF-SELECTION', 
+              'AT SELECTION-SCREEN', 'AT USER-COMMAND',
+              'SELECTION-SCREEN', 'START-OF', 'END-OF', 
+              'SELECTION-SCREEN', 'USER-COMMAND'
+            ];
+            
+            let htmlContent = codeRef.current.innerHTML;
+            
+            // First, special case for START-OF-SELECTION which needs reliable highlighting
+            if (content.includes('START-OF-SELECTION')) {
+              // Use a more specific regex to ensure we capture the entire keyword including hyphens
+              htmlContent = htmlContent.replace(
+                /(START-OF-SELECTION)/gi,
+                '<span style="color: #0000ff; font-weight: bold;">$1</span>'
+              );
             }
-          });
-          
-          // Apply other ABAP-specific styling
-          const commentElements = codeRef.current.querySelectorAll('.hljs-comment');
-          commentElements.forEach(el => {
-            if (el instanceof HTMLElement) {
-              el.style.color = '#008000';
+            
+            // Handle other special compound keywords
+            if (content.includes('START-OF')) {
+              htmlContent = htmlContent.replace(
+                /(START-OF)/gi,
+                '<span style="color: #0000ff; font-weight: bold;">$1</span>'
+              );
             }
-          });
-          
-          const stringElements = codeRef.current.querySelectorAll('.hljs-string');
-          stringElements.forEach(el => {
-            if (el instanceof HTMLElement) {
-              el.style.color = '#a31515';
+            
+            if (content.includes('END-OF-SELECTION')) {
+              htmlContent = htmlContent.replace(
+                /(END-OF-SELECTION)/gi,
+                '<span style="color: #0000ff; font-weight: bold;">$1</span>'
+              );
             }
-          });
+            
+            // Apply other compound keywords
+            compoundKeywords.forEach(keyword => {
+              if (content.includes(keyword)) {
+                // Handle hyphenated keywords by replacing the exact string rather than using word boundaries
+                const escapedKeyword = keyword.replace(/-/g, '\\-');
+                
+                // Match the exact keyword, being careful with word boundaries
+                const regex = new RegExp(`(${escapedKeyword})(?![a-zA-Z0-9_-])`, 'g');
+                
+                htmlContent = htmlContent.replace(
+                  regex, 
+                  '<span style="color: #0000ff; font-weight: bold;">$1</span>'
+                );
+              }
+            });
+            
+            if (codeRef.current) {
+              codeRef.current.innerHTML = htmlContent;
+            }
+          }
         }
       } catch (e) {
         // If highlighting fails, just display as plain text
